@@ -1,5 +1,5 @@
 typedef struct Body {
-    double mass;
+    double m;
 
     // Position
     double x;
@@ -10,6 +10,6 @@ typedef struct Body {
     double vy;
 
     // Force
-    double fx;
-    double fy;
+    double Fx;
+    double Fy;
 } Body;

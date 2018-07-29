@@ -23,6 +23,9 @@ typedef struct QuadTree {
     double x;
     double y;
     double radius;
+    double mx;
+    double my;
+    double m;
     Body *occupant;
     QuadTree* ne;
     QuadTree* nw;
