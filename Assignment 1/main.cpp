@@ -4,8 +4,8 @@
 #include <list>
 #include <vector>
 
-// #include "Body.cpp"
-#include "QuadTree.cpp"
+#include "Body.hpp"
+#include "QuadTree.hpp"
 
 const double SIMULATION_WIDTH = 2000;
 
@@ -36,6 +36,7 @@ int main(int argc, char **argv) {
             bool did_insert = insert(root, body);
 
             if (!did_insert) {
+                printf("Culling out of bound body at (%d, %d)", body->x, body->y);
                 bodies.remove(body); // out-of-bounds
             }
         }
