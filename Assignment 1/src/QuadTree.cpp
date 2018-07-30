@@ -54,8 +54,6 @@ void subdivide(QuadTree *self) {
     // this will be the radius of our children
     auto r = self->radius / 2;
 
-    std::cout << "Subdividing (" << self->x << ", " << self->y << ") with radius " << self->radius << "\n ";
-
     auto x = self->x;
     auto y = self->y;
 
@@ -88,7 +86,7 @@ void subdivide(QuadTree *self) {
     NB: Note that if θ = 0, then no internal node is treated as a single body, 
         and the algorithm degenerates to brute force.
 */
-void calculate_force(QuadTree* self, Body *body) {
+void calculate_force(QuadTree* self, Body* body) {
     // Case 1 - empty external node
     if (self->occupant == nullptr && self->nw == nullptr) { 
         return;
@@ -213,6 +211,9 @@ bool insert(QuadTree *self, Body *body) {
 
         displaced = self->occupant;
         self->occupant = nullptr;
+
+        printf("Subdividing (%f, %f) dismissing (%f, %f) and adding (%f, %f)\n", 
+        self->x, self->y, displaced->x, displaced->y, body->x, body->y);
 
         subdivide(self);
     }

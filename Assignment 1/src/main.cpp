@@ -16,16 +16,20 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
-    std::list<Body*> bodies = {};
+    std::list<Body *> bodies = {};
 
-    Body *foursix = new_Body();
-    foursix->x = 4; foursix->y = 6; foursix->m = 5;
+    Body foursix = Body();
+    foursix.x = 4;
+    foursix.y = 6;
+    foursix.m = 5;
 
-    Body *fivefive = new_Body();
-    fivefive->x = 5; fivefive->y = 5; fivefive->m = 3;
+    Body fivefive = Body();
+    fivefive.x = 5;
+    fivefive.y = 5;
+    fivefive.m = 5;
 
-    bodies.push_back(fivefive);
-    bodies.push_back(foursix);
+    bodies.push_back(&foursix);
+    bodies.push_back(&fivefive);
 
     while (true) {
         QuadTree *root = new_QuadTree(0, 0, SIMULATION_WIDTH / 2);
@@ -36,15 +40,15 @@ int main(int argc, char **argv) {
             bool did_insert = insert(root, body);
 
             if (!did_insert) {
-                printf("Culling out of bound body at (%d, %d)", body->x, body->y);
+                printf("Culling out of bound body at (%f, %f)", body->x, body->y);
                 bodies.remove(body); // out-of-bounds
             }
         }
 
         for (auto body: bodies) {
-            reset_force(body);
+            body->reset_force();
             calculate_force(root, body);
-            timestep(body, 1);
+            body->timestep(1);
         }
     }
 
@@ -53,16 +57,13 @@ int main(int argc, char **argv) {
     std::string line;
     std::ifstream fh(filename);
 
-    if (fh.is_open())
-    {
-        while (getline(fh, line))
-        {
+    if (fh.is_open()) {
+        while (getline(fh, line)) {
             std::stringstream line_stream(line);
             std::string segment;
             std::vector<std::string> seglist;
 
-            while (getline(line_stream, segment, ','))
-            {
+            while (getline(line_stream, segment, ',')) {
                 seglist.push_back(segment);
             }
         }

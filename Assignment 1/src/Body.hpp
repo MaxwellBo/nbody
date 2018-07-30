@@ -1,24 +1,25 @@
 #ifndef _Body_h
 #define _Body_h
 
-typedef struct Body {
-    double m;
+class Body {
+    public:
+        double m;
 
-    // Position
-    double x;
-    double y;
-    
-    // Velocity
-    double vx;
-    double vy;
+        // Position
+        double x;
+        double y;
+        
+        // Velocity
+        double vx;
+        double vy;
 
-    // Force
-    double Fx;
-    double Fy;
-} Body;
-
-Body *new_Body();
-void timestep(Body *self, double dt);
-void reset_force(Body *self);
+        // Force
+        double Fx;
+        double Fy;
+        
+        Body();
+        void timestep(double dt);
+        void reset_force();
+};
 
 #endif
