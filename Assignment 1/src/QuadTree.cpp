@@ -50,6 +50,26 @@ double distance(double x1, double y1, double x2, double y2) {
     return sqrt(a2 + b2);
 }
 
+void exert_force_unidirectionally(Body *here, Body *there)
+{
+    auto m1 = here->m;
+    auto m2 = there->m;
+    auto r = distance(here->x, here->y, there->x, there->y);
+    auto r2 = pow(r, 2);
+
+    auto F = G * ((m1 * m2) / r2);
+
+    auto delta_x = there->x - here->x;
+    auto delta_y = there->y - here->y;
+
+    // turn the vector between our two points into a force vector
+    // of the desired magnitude
+    auto scale_factor = F / r;
+
+    here->Fx += delta_x * scale_factor;
+    here->Fy += delta_y * scale_factor;
+}
+
 void subdivide(QuadTree *self) {
     // this will be the radius of our children
     auto r = self->radius / 2;
@@ -99,23 +119,8 @@ void calculate_force(QuadTree* self, Body* body) {
         } else {
             auto here = body;
             auto there = self->occupant;
-
-            auto m1 = here->m;
-            auto m2 = there->m;
-            auto r = distance(here->x, here->y, there->x, there->y);
-            auto r2 = pow(r, 2);
-
-            auto F = G * (( m1 * m2 ) / r2);
-
-            auto delta_x = there->x - here->x;
-            auto delta_y = there->y - here->y;
-
-            // turn the vector between our two points into a force vector
-            // of the desired magnitude
-            auto scale_factor = F / r; 
-
-            here->Fx += delta_x * scale_factor;
-            here->Fy += delta_y * scale_factor;
+        
+            exert_force_unidirectionally(here, there);
 
             return;
         }
@@ -129,30 +134,22 @@ void calculate_force(QuadTree* self, Body* body) {
 
     if (s / d < THETA) {
         auto here = body;
-        auto there = self;
 
-        auto m1 = here->m;
-        auto m2 = there->m;
-        auto r = distance(here->x, here->y, there->mx, there->my);
-        auto r2 = pow(r, 2);
+        Body there = Body();
+        there.x = self->mx;
+        there.y = self->my;
+        there.m = self->m;
 
-        auto F = G * (( m1 * m2 ) / r2);
-
-        auto delta_x = there->mx - here->x;
-        auto delta_y = there->my - here->y;
-
-        // turn the vector between our two points into a force vector
-        // of the desired magnitude
-        auto scale_factor = F / r; 
-
-        here->Fx += delta_x * scale_factor;
-        here->Fy += delta_y * scale_factor;
+        exert_force_unidirectionally(here, &there);
+        return;
 
     } else {
         calculate_force(self->nw, body);
         calculate_force(self->ne, body);
         calculate_force(self->sw, body);
         calculate_force(self->se, body);
+
+        return;
     }
 }
 
