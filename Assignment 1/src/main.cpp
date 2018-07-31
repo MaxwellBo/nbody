@@ -70,47 +70,43 @@ int main(int argc, char **argv) {
 
     Body foursix = Body();
     foursix.x = 0;
-    foursix.y = 100;
-    foursix.vx = 10;
+    foursix.y = 200;
+    foursix.vx = 5;
     foursix.m = 5;
 
     Body sixfour = Body();
     sixfour.x = 0;
-    sixfour.y = -100;
-    sixfour.vx = -10;
+    sixfour.y = -200;
+    sixfour.vx = -5;
     sixfour.m = 5;
 
     Body three = Body();
     three.x = -200;
-    three.m = 10;
+    three.m = 5;
 
     bodies.push_back(&foursix);
     bodies.push_back(&sixfour);
-    bodies.push_back(&three);
+    // bodies.push_back(&three);
 
     double t = 0;
 
-    while (t < 50) {
+    while (t < 150) {
         QuadTree *root = new_QuadTree(0, 0, SIMULATION_WIDTH / 2);
         // the quad-tree uses half the width as an implementation detail
         // called "radius". Don't ask me why I picked such a stupid name.
 
         for (auto body: bodies) {
             bool did_insert = insert(root, body);
-
-            if (!did_insert) {
-                // printf("Culling out of bound body at (%f, %f)", body->x, body->y);
-                bodies.remove(body); // out-of-bounds
-            }
         }
 
         for (auto body: bodies) {
             body->reset_force();
             calculate_force(root, body);
-            t += TIME_STEP;
             body->timestep(TIME_STEP);
-            dump_timestep(bodies);
         }
+
+        t += TIME_STEP;
+        dump_timestep(bodies);
     }
 
     const std::string &filename = argv[1];

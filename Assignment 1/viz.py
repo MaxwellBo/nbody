@@ -6,7 +6,6 @@ DEFUALT_MASS = 5
 
 def print_body_history(history: list, mass: float):
     r, g, b = random(), random(), random()
-    print(r, g, b)
     turtle.pencolor(r, g, b)
 
     # snap to start
@@ -25,6 +24,14 @@ def print_body_history(history: list, mass: float):
     turtle.penup()
     print()
 
+def print_timestep(timestep: list, masses: list, colours: list):
+    turtle.penup()
+
+    for (body, mass, color) in zip(timestep, masses, colours):
+        r, g, b = color
+        turtle.pencolor(r, g, b)
+        turtle.goto(body.x, body.y)
+        turtle.dot(mass)
 
 @dataclass
 class Body:
@@ -47,12 +54,16 @@ with open("out", "r") as f:
     transpose = list(zip(*timesteps))
 
     turtle.hideturtle()
-    turtle.speed("fastest")
+    turtle.speed(0)
 
+    colours = [(random(), random(), random()) for i in range(len(transpose))]
     masses = [DEFUALT_MASS] * len(transpose)
 
-    for (n, body_history) in enumerate(transpose):
-        print_body_history(body_history, masses[n])
+    # for (n, body_history) in enumerate(transpose):
+    #     print_body_history(body_history, masses[n])
+
+    for timestep in timesteps:
+        print_timestep(timestep, masses, colours)
 
     turtle.done()
 
