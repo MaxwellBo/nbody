@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <cmath>
+#include <vector>
 
 #include "QuadTree.hpp"
 #include "Body.hpp"
@@ -170,7 +171,18 @@ void calculate_force(QuadTree* self, Body* body) {
         there may be several subdivisions during a single insertion.
         Finally, update the center-of-mass and total mass of x.
 */
-        
+
+bool insert_all(QuadTree *self, std::vector<Body *> bodies) {
+    for (auto body : bodies) {
+        bool did_insert = insert(self, body);
+        if (!did_insert)
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
 bool insert(QuadTree *self, Body *body) {
     if (!within_bounds(self, body)) {
         return false;

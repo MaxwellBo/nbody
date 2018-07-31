@@ -41,6 +41,6 @@ double distance(double x1, double y1, double x2, double y2);
 void subdivide(QuadTree *self);
 void calculate_force(QuadTree* self, Body *body);
 bool insert(QuadTree *self, Body *body);
-
+bool insert_all(QuadTree *self, std::vector<Body *> bodies);
 
 #endif
