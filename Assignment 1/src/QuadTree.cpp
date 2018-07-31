@@ -1,10 +1,12 @@
 #include <stdlib.h>
 #include <iostream>
 #include <cmath>
+#include <vector>
 
 #include "QuadTree.hpp"
+#include "Body.hpp"
 
-const double THETA = 0.5;
+const double THETA = 0.0;
 const double G     = 10000; // N(m/kg) ^ 2
 
 QuadTree *new_QuadTree(double x, double y, double radius) {
@@ -27,7 +29,7 @@ QuadTree *new_QuadTree(double x, double y, double radius) {
     return self;
 }
 
-bool withinBounds(QuadTree *self, Body *body) {
+bool within_bounds(QuadTree *self, Body *body) {
     auto radius = self->radius;
     auto x = self->x;
     auto y = self->y;
@@ -62,6 +64,26 @@ void subdivide(QuadTree *self) {
     self->nw = new_QuadTree(x - r, y + r, r);
     self->se = new_QuadTree(x + r, y - r, r);
     self->sw = new_QuadTree(x - r, y - r, r);
+}
+
+
+void exert_force_unidirectionally(Body *here, Body *there) {
+    auto m1 = here->m;
+    auto m2 = there->m;
+    auto r = distance(here->x, here->y, there->x, there->y);
+    auto r2 = pow(r, 2);
+
+    auto F = G * (( m1 * m2 ) / r2);
+
+    auto delta_x = there->x - here->x;
+    auto delta_y = there->y - here->y;
+
+    // turn the vector between our two points into a force vector
+    // of the desired magnitude
+    auto scale_factor = F / r; 
+
+    here->Fx += delta_x * scale_factor;
+    here->Fy += delta_y * scale_factor;
 }
 
 /*  To calculate the net force acting on body b, use the following recursive procedure, 
@@ -100,22 +122,7 @@ void calculate_force(QuadTree* self, Body* body) {
             auto here = body;
             auto there = self->occupant;
 
-            auto m1 = here->m;
-            auto m2 = there->m;
-            auto r = distance(here->x, here->y, there->x, there->y);
-            auto r2 = pow(r, 2);
-
-            auto F = G * (( m1 * m2 ) / r2);
-
-            auto delta_x = there->x - here->x;
-            auto delta_y = there->y - here->y;
-
-            // turn the vector between our two points into a force vector
-            // of the desired magnitude
-            auto scale_factor = F / r; 
-
-            here->Fx += delta_x * scale_factor;
-            here->Fy += delta_y * scale_factor;
+            exert_force_unidirectionally(here, there);
 
             return;
         }
@@ -129,30 +136,23 @@ void calculate_force(QuadTree* self, Body* body) {
 
     if (s / d < THETA) {
         auto here = body;
-        auto there = self;
 
-        auto m1 = here->m;
-        auto m2 = there->m;
-        auto r = distance(here->x, here->y, there->mx, there->my);
-        auto r2 = pow(r, 2);
+        Body there = Body();
+        there.x = self->mx;
+        there.y = self->my;
+        there.m = self->m;
 
-        auto F = G * (( m1 * m2 ) / r2);
+        exert_force_unidirectionally(here, &there);
 
-        auto delta_x = there->mx - here->x;
-        auto delta_y = there->my - here->y;
-
-        // turn the vector between our two points into a force vector
-        // of the desired magnitude
-        auto scale_factor = F / r; 
-
-        here->Fx += delta_x * scale_factor;
-        here->Fy += delta_y * scale_factor;
+        return;
 
     } else {
         calculate_force(self->nw, body);
         calculate_force(self->ne, body);
         calculate_force(self->sw, body);
         calculate_force(self->se, body);
+
+        return;
     }
 }
 
@@ -172,9 +172,22 @@ void calculate_force(QuadTree* self, Body* body) {
         there may be several subdivisions during a single insertion.
         Finally, update the center-of-mass and total mass of x.
 */
-        
+
+bool insert_all(QuadTree *self, std::vector<Body *> bodies) {
+    for (auto body: bodies) {
+        bool did_insert = insert(self, body);
+
+        if (!did_insert) {
+            return false;
+        }
+    }
+
+    return true;
+
+}
+
 bool insert(QuadTree *self, Body *body) {
-    if (!withinBounds(self, body)) {
+    if (!within_bounds(self, body)) {
         return false;
     }
 
