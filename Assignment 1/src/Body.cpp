@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "body.hpp"
+#include "Body.hpp"
 
 Body::Body():
     m(1),

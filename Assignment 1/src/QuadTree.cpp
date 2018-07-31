@@ -3,6 +3,7 @@
 #include <cmath>
 
 #include "QuadTree.hpp"
+#include "Body.hpp"
 
 const double THETA = 0.5;
 const double G     = 10000; // N(m/kg) ^ 2
@@ -27,7 +28,7 @@ QuadTree *new_QuadTree(double x, double y, double radius) {
     return self;
 }
 
-bool withinBounds(QuadTree *self, Body *body) {
+bool within_bounds(QuadTree *self, Body *body) {
     auto radius = self->radius;
     auto x = self->x;
     auto y = self->y;
@@ -171,7 +172,7 @@ void calculate_force(QuadTree* self, Body* body) {
 */
         
 bool insert(QuadTree *self, Body *body) {
-    if (!withinBounds(self, body)) {
+    if (!within_bounds(self, body)) {
         return false;
     }
 

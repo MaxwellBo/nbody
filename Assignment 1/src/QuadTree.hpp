@@ -17,7 +17,7 @@
 //         Body& occupant;
 //         // Methods
 //         bool insert(Body& body);
-//         bool withinBounds(Body& body);
+//         bool within_bounds(Body& body);
 //         void subdivide();
 // };
 
@@ -36,7 +36,7 @@ typedef struct QuadTree {
 } QuadTree;
 
 QuadTree *new_QuadTree(double x, double y, double radius);
-bool withinBounds(QuadTree *self, Body *body);
+bool within_bounds(QuadTree *self, Body *body);
 double distance(double x1, double y1, double x2, double y2);
 void subdivide(QuadTree *self);
 void calculate_force(QuadTree* self, Body *body);
