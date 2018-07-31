@@ -5,7 +5,7 @@
 #include "QuadTree.hpp"
 
 const double THETA = 0.5;
-const double G     = 1; // N(m/kg) ^ 2
+const double G     = 10000; // N(m/kg) ^ 2
 
 QuadTree *new_QuadTree(double x, double y, double radius) {
     QuadTree *self = (QuadTree *)malloc(sizeof(QuadTree));
@@ -212,8 +212,8 @@ bool insert(QuadTree *self, Body *body) {
         displaced = self->occupant;
         self->occupant = nullptr;
 
-        printf("Subdividing (%f, %f) dismissing (%f, %f) and adding (%f, %f)\n", 
-        self->x, self->y, displaced->x, displaced->y, body->x, body->y);
+        // printf("Subdividing (%f, %f) dismissing (%f, %f) and adding (%f, %f)\n", 
+        // self->x, self->y, displaced->x, displaced->y, body->x, body->y);
 
         subdivide(self);
     }

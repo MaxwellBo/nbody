@@ -13,7 +13,7 @@ Body::Body():
 }
 
 void Body::timestep(double dt) {
-    printf("Step (%f, %f) to ", x, y);
+    // printf("Step (%f, %f) to ", x, y);
 
     // F = ma
     auto ax = Fx / m;
@@ -33,7 +33,7 @@ void Body::timestep(double dt) {
     x += dx;
     y += dy;
 
-    printf("(%f, %f)\n", x, y);
+    // printf("(%f, %f)\n", x, y);
 }
 
 void Body::reset_force() {
