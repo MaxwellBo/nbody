@@ -42,5 +42,6 @@ void subdivide(QuadTree *self);
 void calculate_force(QuadTree* self, Body *body);
 bool insert(QuadTree *self, Body *body);
 bool insert_all(QuadTree *self, std::vector<Body *> bodies);
+void exert_force_unidirectionally(Body *here, Body *there);
 
 #endif

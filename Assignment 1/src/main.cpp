@@ -1,17 +1,15 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <list>
 #include <vector>
 
 // #include "CImg.h"
 #include "Body.hpp"
 #include "QuadTree.hpp"
 
-const double SIMULATION_WIDTH = 2000;
 const double TIME_STEP = 1;
 
-void calculate_total_energy(std::list<Body *> bodies) {
+void calculate_total_energy(std::vector<Body *> bodies) {
 }
 
 /*
@@ -25,11 +23,11 @@ x1 y1 vx1 vy1
 ..
 xN yN vxN vyN
 */
-void parse_input(std::list<Body *> bodies) {
+void parse_input(std::vector<Body *> bodies) {
 
 }
 
-void dump_masses(std::list<Body *> bodies) {
+void dump_masses(std::vector<Body *> bodies) {
     for (auto body: bodies) {
         printf("%f\n", body->m);
     }
@@ -51,7 +49,7 @@ x1 y1 vx1 vy1
 ...
 xN yN vxN vyN
 */
-void dump_timestep(std::list<Body *> bodies) {
+void dump_timestep(std::vector<Body *> bodies) {
     for (auto body: bodies) {
         printf("%f %f %f %f\n", body->x, body->y, body->vx, body->vy);
     }
@@ -66,7 +64,7 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
-    std::list<Body *> bodies = {};
+    std::vector<Body *> bodies = {};
 
     Body foursix = Body();
     foursix.x = 0;
@@ -89,19 +87,38 @@ int main(int argc, char **argv) {
     // bodies.push_back(&three);
 
     double t = 0;
+    double simulation_width = 2000;
 
     while (t < 150) {
-        QuadTree *root = new_QuadTree(0, 0, SIMULATION_WIDTH / 2);
+        QuadTree *root = new_QuadTree(0, 0, simulation_width / 2);
         // the quad-tree uses half the width as an implementation detail
         // called "radius". Don't ask me why I picked such a stupid name.
 
-        for (auto body: bodies) {
-            bool did_insert = insert(root, body);
+        while (true) {
+            if (insert_all(root, bodies)) {
+                break;
+            }
+
+            simulation_width *= 2; 
+            root = new_QuadTree(0, 0, simulation_width / 2);
         }
 
         for (auto body: bodies) {
             body->reset_force();
-            calculate_force(root, body);
+            // calculate_force(root, body);
+        }
+
+        for (size_t i = 0; i < bodies.size() - 1; i++) {
+            auto x = bodies[i];
+
+            for (size_t j = i + 1; j < bodies.size(); j++) {
+                auto y = bodies[j];
+                exert_force_unidirectionally(x, y);
+                exert_force_unidirectionally(y, x);
+            }
+        }
+
+        for (auto body: bodies) {
             body->timestep(TIME_STEP);
         }
 
@@ -118,10 +135,10 @@ int main(int argc, char **argv) {
         while (getline(fh, line)) {
             std::stringstream line_stream(line);
             std::string segment;
-            std::vector<std::string> seglist;
+            std::vector<std::string> segs;
 
             while (getline(line_stream, segment, ',')) {
-                seglist.push_back(segment);
+                segs.push_back(segment);
             }
         }
 
