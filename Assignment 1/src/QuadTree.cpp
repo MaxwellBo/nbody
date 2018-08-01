@@ -52,8 +52,7 @@ double distance(double x1, double y1, double x2, double y2) {
     return sqrt(a2 + b2);
 }
 
-void exert_force_unidirectionally(Body *here, Body *there)
-{
+void exert_force_unidirectionally(Body *here, Body *there) {
     auto m1 = here->m;
     auto m2 = there->m;
     auto r = distance(here->x, here->y, there->x, there->y);

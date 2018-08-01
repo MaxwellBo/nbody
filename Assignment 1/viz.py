@@ -2,8 +2,6 @@ import turtle
 from dataclasses import dataclass
 from random import random
 
-DEFUALT_MASS = 5
-
 def print_body_history(history: list, mass: float):
     r, g, b = random(), random(), random()
     turtle.pencolor(r, g, b)
@@ -45,19 +43,27 @@ def parse_body(line: str) -> Body:
     return Body(x=x, y=y, vx=vx, vy=vy)
 
 def parse_timestep(block: str) -> list:
-    return [ parse_body(i) for i in block.split("\n") ]
+    return [ parse_body(i) for i in block.split("\n")[1:] ]
 
 with open("out", "r") as f:
     contents = f.read()
-    timesteps = [ parse_timestep(i) for i in contents.strip().split("\n\n") ]
+
+    bodies, timesteps, interval, delta_t = contents.split('\n')[0].split()
+    bodies, timesteps, interval, delta_t = int(bodies), int(timesteps), float(interval), float(delta_t)
+
+    masses = [ float(i) for i in contents.split('\n')[1:bodies + 1] ]
+    assert(len(masses) == bodies)
+
+    timesteps = "\n".join(contents.split('\n')[bodies + 1:])
+    timesteps = [ parse_timestep(i) for i in timesteps.strip().split("\n\n") ]
 
     transpose = list(zip(*timesteps))
 
     turtle.hideturtle()
     turtle.speed(0)
+    turtle.tracer(1, 1)
 
     colours = [(random(), random(), random()) for i in range(len(transpose))]
-    masses = [DEFUALT_MASS] * len(transpose)
 
     # for (n, body_history) in enumerate(transpose):
     #     print_body_history(body_history, masses[n])

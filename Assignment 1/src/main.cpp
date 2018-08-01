@@ -49,7 +49,11 @@ x1 y1 vx1 vy1
 ...
 xN yN vxN vyN
 */
-void dump_timestep(std::vector<Body *> bodies) {
+void dump_timestep(double timestamp, std::vector<Body *> bodies) {
+    double total_energy = 0;
+
+    printf("%f %f\n", timestamp, total_energy);
+
     for (auto body: bodies) {
         printf("%f %f %f %f\n", body->x, body->y, body->vx, body->vy);
     }
@@ -57,8 +61,16 @@ void dump_timestep(std::vector<Body *> bodies) {
     printf("\n");
 }
 
-int main(int argc, char **argv) {
+void dump_meta_info(std::vector<Body *> bodies) {
+    int nbodies = bodies.size();
+    int timesteps = 0;
+    double output_interval = 0;
+    double delta_T = 0;
 
+    printf("%d %d %f %f\n", nbodies, timesteps, output_interval, delta_T); 
+}
+
+int main(int argc, char **argv) {
     if (argc == 1) {
         printf("Please supply an input .csv file\n");
         exit(1);
@@ -76,7 +88,7 @@ int main(int argc, char **argv) {
     sixfour.x = 0;
     sixfour.y = -200;
     sixfour.vx = -5;
-    sixfour.m = 5;
+    sixfour.m = 20;
 
     Body three = Body();
     three.x = -200;
@@ -88,6 +100,9 @@ int main(int argc, char **argv) {
 
     double t = 0;
     double simulation_width = 2000;
+
+    dump_meta_info(bodies);
+    dump_masses(bodies);
 
     while (t < 150) {
         QuadTree *root = new_QuadTree(0, 0, simulation_width / 2);
@@ -123,7 +138,7 @@ int main(int argc, char **argv) {
         }
 
         t += TIME_STEP;
-        dump_timestep(bodies);
+        dump_timestep(t, bodies);
     }
 
     const std::string &filename = argv[1];
