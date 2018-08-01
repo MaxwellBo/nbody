@@ -8,6 +8,8 @@
 #include "QuadTree.hpp"
 
 const double TIME_STEP = 1;
+const double T_LAST = 150;
+const double INITIAL_SIMULATION_WIDTH = 2000;
 
 void calculate_total_energy(std::vector<Body *> bodies) {
 }
@@ -63,11 +65,11 @@ void dump_timestep(double timestamp, std::vector<Body *> bodies) {
 
 void dump_meta_info(std::vector<Body *> bodies) {
     int nbodies = bodies.size();
-    int timesteps = 0;
-    double output_interval = 0;
-    double delta_T = 0;
+    int timesteps = T_LAST / TIME_STEP;
+    double output_interval = TIME_STEP;
+    double delta_t = T_LAST;
 
-    printf("%d %d %f %f\n", nbodies, timesteps, output_interval, delta_T); 
+    printf("%d %d %f %f\n", nbodies, timesteps, output_interval, delta_t); 
 }
 
 int main(int argc, char **argv) {
@@ -99,13 +101,14 @@ int main(int argc, char **argv) {
     // bodies.push_back(&three);
 
     double t = 0;
-    double simulation_width = 2000;
 
     dump_meta_info(bodies);
     dump_masses(bodies);
 
-    while (t < 150) {
-        QuadTree *root = new_QuadTree(0, 0, simulation_width / 2);
+    while (t < T_LAST) {
+        double root_x = 0;
+        double root_y = 0;
+        QuadTree *root = new_QuadTree(root_x, root_y, INITIAL_SIMULATION_WIDTH / 2);
         // the quad-tree uses half the width as an implementation detail
         // called "radius". Don't ask me why I picked such a stupid name.
 
@@ -114,8 +117,8 @@ int main(int argc, char **argv) {
                 break;
             }
 
-            simulation_width *= 2; 
-            root = new_QuadTree(0, 0, simulation_width / 2);
+            auto simulation_radius = 2 * root->radius; 
+            root = new_QuadTree(root_x, root_y, simulation_radius);
         }
 
         for (auto body: bodies) {
