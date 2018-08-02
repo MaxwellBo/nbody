@@ -58,17 +58,16 @@ def parse_timestep(block: str) -> Timestep:
 with open("out", "r") as f:
     contents = f.read()
 
-    bodies, timestep_n, interval, delta_t = contents.split('\n')[0].split()
-    bodies, timestep_n, interval, delta_t = int(bodies), int(timestep_n), float(interval), float(delta_t)
+    bodies_n, timestep_n, interval, delta_t = contents.split('\n')[0].split()
+    bodies_n, timestep_n, interval, delta_t = int(bodies_n), int(timestep_n), float(interval), float(delta_t)
 
-    masses = [ float(i) for i in contents.split('\n')[1:bodies + 1] ]
-    assert(len(masses) == bodies)
+    masses = [ float(i) for i in contents.split('\n')[1:bodies_n + 1] ]
+    assert(len(masses) == bodies_n)
 
-    colours = [(random(), random(), random()) for i in range(bodies) ]
+    colours = [(random(), random(), random()) for i in range(bodies_n) ]
 
-    timestep_block = "\n".join(contents.split('\n')[bodies + 1:])
+    timestep_block = "\n".join(contents.split('\n')[bodies_n + 1:])
     timesteps = [ parse_timestep(i) for i in timestep_block.strip().split("\n\n") ]
-    print(len(timesteps), timestep_n)
     assert(len(timesteps) == timestep_n)
 
     turtle.hideturtle()

@@ -64,12 +64,12 @@ void dump_timestep(double timestamp, std::vector<Body *> bodies) {
 }
 
 void dump_meta_info(std::vector<Body *> bodies) {
-    int nbodies = bodies.size();
+    int bodies_n = bodies.size();
     int timesteps = T_LAST / TIME_STEP;
     double output_interval = TIME_STEP;
     double delta_t = T_LAST;
 
-    printf("%d %d %f %f\n", nbodies, timesteps, output_interval, delta_t); 
+    printf("%d %d %f %f\n", bodies_n, timesteps, output_interval, delta_t); 
 }
 
 int main(int argc, char **argv) {
@@ -78,48 +78,94 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
+    const std::string &filename = argv[1];
+
+    std::string line;
+    std::ifstream fh(filename);
+
+    int bodies_n = 0;
+    std::vector<double> masses = {};
     std::vector<Body *> bodies = {};
 
-    Body foursix = Body();
-    foursix.x = 0;
-    foursix.y = 200;
-    foursix.vx = 5;
-    foursix.m = 5;
+    if (fh.is_open()) {
 
-    Body sixfour = Body();
-    sixfour.x = 0;
-    sixfour.y = -200;
-    sixfour.vx = -5;
-    sixfour.m = 20;
+        // numBodies
+        getline(fh, line);
+        sscanf(line.c_str(), "%d", &bodies_n);
 
-    Body three = Body();
-    three.x = -200;
-    three.m = 5;
+        while (getline(fh, line)) {
+            std::stringstream line_stream(line);
+            std::string segment;
+            std::vector<std::string> segs;
 
-    bodies.push_back(&foursix);
-    bodies.push_back(&sixfour);
-    // bodies.push_back(&three);
+            while (getline(line_stream, segment, ' ')) {
+                segs.push_back(segment);
+            }
+
+            // a mass
+            if (segs.size() == 1) {
+                double mass;
+
+                if (sscanf(line.c_str(), "%lf", &mass)) {
+                    masses.push_back(mass);
+                }
+            } 
+            // a total energy description
+            else if (segs.size() == 2) { 
+                // TODO
+            }
+            // a body
+            else if (segs.size() == 4) {
+                double x;
+                double y;
+                double vx;
+                double vy; 
+
+                double mass;
+
+                if (sscanf(line.c_str(), "%lf %lf %lf %lf", &x, &y, &vx, &vy)) {
+                    Body *body = new Body();
+                    body->x = x;
+                    body->y = y;
+                    body->vx = vx;
+                    body->vy = vy;
+
+                    bodies.push_back(body);
+                } 
+            }
+        }
+
+        fh.close();
+    }
+
+    assert(bodies_n == bodies.size());
+    assert(bodies_n == masses.size());
+
+    for(size_t i = 0; i < bodies.size(); i++) {
+        bodies[i]->m = masses[i];
+    }
 
     double t = 0;
 
     dump_meta_info(bodies);
     dump_masses(bodies);
+    dump_timestep(t, bodies);
 
-    while (t < T_LAST) {
+    while (t < T_LAST - TIME_STEP) {
         double root_x = 0;
         double root_y = 0;
-        QuadTree *root = new_QuadTree(root_x, root_y, INITIAL_SIMULATION_WIDTH / 2);
+        // QuadTree *root = new_QuadTree(root_x, root_y, INITIAL_SIMULATION_WIDTH / 2);
         // the quad-tree uses half the width as an implementation detail
         // called "radius". Don't ask me why I picked such a stupid name.
 
-        while (true) {
-            if (insert_all(root, bodies)) {
-                break;
-            }
+        // while (true) {
+        //     if (insert_all(root, bodies)) {
+        //         break;
+        //     }
 
-            auto simulation_radius = 2 * root->radius; 
-            root = new_QuadTree(root_x, root_y, simulation_radius);
-        }
+        //     auto simulation_radius = 2 * root->radius; 
+        //     root = new_QuadTree(root_x, root_y, simulation_radius);
+        // }
 
         for (auto body: bodies) {
             body->reset_force();
@@ -142,25 +188,6 @@ int main(int argc, char **argv) {
 
         t += TIME_STEP;
         dump_timestep(t, bodies);
-    }
-
-    const std::string &filename = argv[1];
-
-    std::string line;
-    std::ifstream fh(filename);
-
-    if (fh.is_open()) {
-        while (getline(fh, line)) {
-            std::stringstream line_stream(line);
-            std::string segment;
-            std::vector<std::string> segs;
-
-            while (getline(line_stream, segment, ',')) {
-                segs.push_back(segment);
-            }
-        }
-
-        fh.close();
     }
 
     return 0;
