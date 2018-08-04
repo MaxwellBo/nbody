@@ -1,4 +1,5 @@
 import turtle
+import math
 from dataclasses import dataclass
 from random import random
 
@@ -27,20 +28,17 @@ def print_body_history(history: list, mass: float, colour: tuple):
     turtle.pendown()
 
     for step in history:
-        print(step)
         turtle.goto(step.x, step.y)
-        turtle.dot(mass)
+        turtle.dot(math.log(mass) * 2)
 
     # end the trace
     turtle.penup()
-    print()
 
 def print_timestep(timestep: Timestep, turtles: list, masses: list):
     for (t, body, mass) in zip(turtles, timestep.bodies, masses):
-        print(body)
         t.goto(body.x, body.y)
         t.pendown()
-        t.dot(mass) # size
+        t.dot(math.log(mass) * 4) # size
 
 def parse_body(line: str) -> Body:
     x, y, vx, vy = [ float(i) for i in line.split() ]

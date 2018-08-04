@@ -7,9 +7,11 @@
 #include "Body.hpp"
 #include "QuadTree.hpp"
 
-const double TIME_STEP = 1;
+const double TIME_STEP = 0.2;
 const double T_LAST = 150;
 const double INITIAL_SIMULATION_WIDTH = 2000;
+
+const bool BRUTE_FORCE = false;
 
 void calculate_total_energy(std::vector<Body *> bodies) {
 }
@@ -152,33 +154,44 @@ int main(int argc, char **argv) {
     dump_timestep(t, bodies);
 
     while (t < T_LAST - TIME_STEP) {
-        double root_x = 0;
-        double root_y = 0;
-        // QuadTree *root = new_QuadTree(root_x, root_y, INITIAL_SIMULATION_WIDTH / 2);
-        // the quad-tree uses half the width as an implementation detail
-        // called "radius". Don't ask me why I picked such a stupid name.
+        QuadTree* root;
 
-        // while (true) {
-        //     if (insert_all(root, bodies)) {
-        //         break;
-        //     }
+        if (!BRUTE_FORCE) {
+            double root_x = 0;
+            double root_y = 0;
+            
+            root = new_QuadTree(root_x, root_y, INITIAL_SIMULATION_WIDTH / 2);
+            // the quad-tree uses half the width as an implementation detail
+            // called "radius". Don't ask me why I picked such a stupid name.
 
-        //     auto simulation_radius = 2 * root->radius; 
-        //     root = new_QuadTree(root_x, root_y, simulation_radius);
-        // }
+            while (true) {
+                if (insert_all(root, bodies)) {
+                    break;
+                }
+
+                auto simulation_radius = 2 * root->radius; 
+                root = new_QuadTree(root_x, root_y, simulation_radius);
+            }
+
+        }
 
         for (auto body: bodies) {
             body->reset_force();
-            // calculate_force(root, body);
+
+            if (!BRUTE_FORCE) {
+                calculate_force(root, body);
+            }
         }
 
-        for (size_t i = 0; i < bodies.size() - 1; i++) {
-            auto x = bodies[i];
+        if (BRUTE_FORCE) {
+            for (size_t i = 0; i < bodies.size() - 1; i++) {
+                auto x = bodies[i];
 
-            for (size_t j = i + 1; j < bodies.size(); j++) {
-                auto y = bodies[j];
-                exert_force_unidirectionally(x, y);
-                exert_force_unidirectionally(y, x);
+                for (size_t j = i + 1; j < bodies.size(); j++) {
+                    auto y = bodies[j];
+                    exert_force_unidirectionally(x, y);
+                    exert_force_unidirectionally(y, x);
+                }
             }
         }
 
