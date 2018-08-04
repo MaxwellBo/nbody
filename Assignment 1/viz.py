@@ -35,15 +35,12 @@ def print_body_history(history: list, mass: float, colour: tuple):
     turtle.penup()
     print()
 
-def print_timestep(timestep: Timestep, masses: list, colours: list):
-    turtle.penup()
-
-    for (body, mass, colour) in zip(timestep.bodies, masses, colours):
+def print_timestep(timestep: Timestep, turtles: list, masses: list):
+    for (t, body, mass) in zip(turtles, timestep.bodies, masses):
         print(body)
-        r, g, b = colour
-        turtle.pencolor(r, g, b)
-        turtle.goto(body.x, body.y)
-        turtle.dot(mass) # size
+        t.goto(body.x, body.y)
+        t.pendown()
+        t.dot(mass) # size
 
 def parse_body(line: str) -> Body:
     x, y, vx, vy = [ float(i) for i in line.split() ]
@@ -64,22 +61,28 @@ with open("out", "r") as f:
     masses = [ float(i) for i in contents.split('\n')[1:bodies_n + 1] ]
     assert(len(masses) == bodies_n)
 
-    colours = [(random(), random(), random()) for i in range(bodies_n) ]
+    turtles = [ turtle.Turtle() for i in range(bodies_n) ]
+
+    turtle.hideturtle()
+    turtle.tracer(1, 1)
+    turtle.speed(0)
+
+    for t in turtles:
+        r, g, b = random(), random(), random()
+        t.hideturtle()
+        t.penup()
+        t.pencolor(r, g, b)
 
     timestep_block = "\n".join(contents.split('\n')[bodies_n + 1:])
     timesteps = [ parse_timestep(i) for i in timestep_block.strip().split("\n\n") ]
     assert(len(timesteps) == timestep_n)
-
-    turtle.hideturtle()
-    turtle.speed(0)
-    turtle.tracer(1, 1)
 
     # transpose = list(zip(*timesteps))
     # for (n, body_history) in enumerate(transpose):
     #     print_body_history(body_history, masses[n], colours[n])
 
     for timestep in timesteps:
-        print_timestep(timestep, masses, colours)
+        print_timestep(timestep, turtles, masses)
 
     turtle.done()
 
