@@ -2,6 +2,7 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <time.h>
 
 // #include "CImg.h"
 #include "Body.hpp"
@@ -12,6 +13,14 @@ const double T_LAST = 150;
 const double INITIAL_SIMULATION_WIDTH = 2000;
 
 const bool BRUTE_FORCE = false;
+
+double cpu_time(void){
+    double value;
+
+    value = (double)clock() / (double)CLOCKS_PER_SEC;
+
+    return value;
+}
 
 double calculate_total_energy(const std::vector<Body *>& bodies) {
     return 1.0;
@@ -157,6 +166,8 @@ int main(int argc, char **argv) {
     dump_masses(bodies);
     dump_timestep(t, bodies);
 
+    double start = cpu_time();
+
     while (t < T_LAST - TIME_STEP) {
         QuadTree* root;
 
@@ -206,6 +217,8 @@ int main(int argc, char **argv) {
         t += TIME_STEP;
         dump_timestep(t, bodies);
     }
+
+    fprintf(stderr, "Total CPU time is %lf\n", cpu_time() - start);
 
     return 0;
 }
