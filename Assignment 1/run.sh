@@ -1,1 +1,1 @@
-touch out && rm out && make && ./nbody in > out && python3 viz.py
+touch out && rm out && make && ./nbody in > out && pypy3 viz.py

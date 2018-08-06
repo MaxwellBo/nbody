@@ -7,29 +7,26 @@
 // #include "CImg.h"
 #include "Body.hpp"
 #include "QuadTree.hpp"
+const unsigned int MINUTE = 60;
+const unsigned int HOUR = MINUTE * 60;
 
-const double TIME_STEP = 1;
-const double T_LAST = 150;
+const double TIME_STEP = 0.001; // millisecond precision
+const double T_LAST = 2 * MINUTE;
 const double INITIAL_SIMULATION_WIDTH = 2000;
-
-const bool BRUTE_FORCE = false;
+const double OUTPUT_TIME_INTERVAL = 0.1;
+const unsigned int OUTPUT_STEP_INTERVAL = OUTPUT_TIME_INTERVAL / TIME_STEP;
+const bool   BRUTE_FORCE = true;
 
 double cpu_time(void) {
-    double value;
-
-    value = (double)clock() / (double)CLOCKS_PER_SEC;
-
-    return value;
+    return (double)clock() / (double)CLOCKS_PER_SEC;
 }
 
 double calculate_total_energy(const std::vector<Body>& bodies) {
     return 1.0;
 }
 
-
 void dump_masses(const std::vector<Body>& bodies) {
-    // HOW TO FETCH FROM ARRAY
-    for (auto body: bodies) {
+    for (const auto& body: bodies) {
         printf("%f\n", body.m);
     }
 }
@@ -65,7 +62,7 @@ void dump_timestep(double timestamp, const std::vector<Body>& bodies) {
 void dump_meta_info(const std::vector<Body>& bodies) {
     unsigned int bodies_n = bodies.size();
     unsigned int timesteps = T_LAST / TIME_STEP;
-    double output_interval = TIME_STEP;
+    double output_interval = OUTPUT_TIME_INTERVAL;
     double delta_t = T_LAST;
 
     printf("%d %d %f %f\n", bodies_n, timesteps, output_interval, delta_t); 
@@ -158,7 +155,8 @@ int main(int argc, char **argv) {
         bodies[i].m = masses[i];
     }
 
-    double t = 0;
+    double t = 0; // XXX: optimization - source of truth, update both
+    unsigned int step = 0;
 
     dump_meta_info(bodies);
     dump_masses(bodies);
@@ -213,7 +211,11 @@ int main(int argc, char **argv) {
         }
 
         t += TIME_STEP;
-        dump_timestep(t, bodies);
+        step++;
+
+        if (step % OUTPUT_STEP_INTERVAL == 0) {
+            dump_timestep(t, bodies);
+        }
     }
 
     fprintf(stderr, "Total CPU time is %lf\n", cpu_time() - start);

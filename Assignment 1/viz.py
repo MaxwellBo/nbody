@@ -1,20 +1,21 @@
 import turtle
 import math
-from dataclasses import dataclass
 from random import random
 
-@dataclass
-class Body:
-    x: float
-    y: float
-    vx: float
-    vy: float
+FULL_SPEED = True
 
-@dataclass
-class Timestep:
-    timestamp: float
-    total_energy: float
-    bodies: list
+class Body(object):
+    def __init__(self, x, y, vx, vy):
+        self.x = x
+        self.y = y
+        self.vx = vx
+        self.vy = vy
+
+class Timestep(object):
+    def __init__(self, timestamp, total_energy, bodies):
+        self.timestamp = timestamp
+        self.total_energy = total_energy
+        self.bodies = bodies
 
 def print_body_history(history: list, mass: float, colour: tuple):
     r, g, b = colour
@@ -62,7 +63,10 @@ with open("out", "r") as f:
     turtles = [ turtle.Turtle() for i in range(bodies_n) ]
 
     turtle.hideturtle()
-    turtle.tracer(1, 1)
+
+    if FULL_SPEED:
+        turtle.tracer(0, 0)
+
     turtle.speed(0)
 
     for t in turtles:
@@ -73,7 +77,7 @@ with open("out", "r") as f:
 
     timestep_block = "\n".join(contents.split('\n')[bodies_n + 1:])
     timesteps = [ parse_timestep(i) for i in timestep_block.strip().split("\n\n") ]
-    assert(len(timesteps) == timestep_n)
+    print((len(timesteps) * interval) - interval, timestep_n)
 
     # transpose = list(zip(*timesteps))
     # for (n, body_history) in enumerate(transpose):

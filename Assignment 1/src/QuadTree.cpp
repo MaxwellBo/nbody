@@ -21,8 +21,8 @@ QuadTree::QuadTree(double x, double y, double radius):
     m(1),
     ne(nullptr),
     nw(nullptr),
-    sw(nullptr),
     se(nullptr),
+    sw(nullptr),
     occupant(nullptr) {
 }
 
