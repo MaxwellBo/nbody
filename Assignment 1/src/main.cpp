@@ -13,9 +13,9 @@ const unsigned int HOUR = MINUTE * 60;
 const double TIME_STEP = 0.001; // millisecond precision
 const double T_LAST = 2 * MINUTE;
 const double INITIAL_SIMULATION_WIDTH = 2000;
-const double OUTPUT_TIME_INTERVAL = 0.1;
+const double OUTPUT_TIME_INTERVAL = 1;
 const unsigned int OUTPUT_STEP_INTERVAL = OUTPUT_TIME_INTERVAL / TIME_STEP;
-const bool   BRUTE_FORCE = true;
+const bool   BRUTE_FORCE = false;
 
 double cpu_time(void) {
     return (double)clock() / (double)CLOCKS_PER_SEC;
@@ -25,9 +25,9 @@ double calculate_total_energy(const std::vector<Body>& bodies) {
     return 1.0;
 }
 
-void dump_masses(const std::vector<Body>& bodies) {
+void dump_masses(FILE* file, const std::vector<Body>& bodies) {
     for (const auto& body: bodies) {
-        printf("%f\n", body.m);
+        fprintf(file, "%f\n", body.m);
     }
 }
 
@@ -47,25 +47,25 @@ x1 y1 vx1 vy1
 ...
 xN yN vxN vyN
 */
-void dump_timestep(double timestamp, const std::vector<Body>& bodies) {
+void dump_timestep(FILE* file, double timestamp, const std::vector<Body>& bodies) {
     double total_energy = calculate_total_energy(bodies);
 
-    printf("%f %f\n", timestamp, total_energy);
+    fprintf(file, "%f %f\n", timestamp, total_energy);
 
     for (const auto& body: bodies) {
-        printf("%f %f %f %f\n", body.x, body.y, body.vx, body.vy);
+        fprintf(file, "%f %f %f %f\n", body.x, body.y, body.vx, body.vy);
     }
 
-    printf("\n");
+    fprintf(file, "\n");
 }
 
-void dump_meta_info(const std::vector<Body>& bodies) {
+void dump_meta_info(FILE* file, const std::vector<Body>& bodies) {
     unsigned int bodies_n = bodies.size();
     unsigned int timesteps = T_LAST / TIME_STEP;
     double output_interval = OUTPUT_TIME_INTERVAL;
     double delta_t = T_LAST;
 
-    printf("%d %d %f %f\n", bodies_n, timesteps, output_interval, delta_t); 
+    fprintf(file, "%d %d %f %f\n", bodies_n, timesteps, output_interval, delta_t); 
 }
 
 /*
@@ -80,15 +80,16 @@ x1 y1 vx1 vy1
 xN yN vxN vyN
 */
 int main(int argc, char **argv) {
-    if (argc == 1) {
-        printf("Please supply an input .csv file\n");
+    if (argc == 2) {
+        printf("Please supply input and output filenames\n");
         exit(1);
     }
 
-    const std::string &filename = argv[1];
+    const std::string &input_filename = argv[1];
+    const std::string &output_filename = argv[2];
 
     std::string line;
-    std::ifstream fh(filename);
+    std::ifstream input_fh(input_filename);
 
     unsigned int total_energy = 0;
     unsigned int bodies_n = 0;
@@ -96,13 +97,13 @@ int main(int argc, char **argv) {
     std::vector<double> masses = {};
     std::vector<Body> bodies = {};
 
-    if (fh.is_open()) {
+    if (input_fh.is_open()) {
 
         // numBodies
-        getline(fh, line);
+        getline(input_fh, line);
         sscanf(line.c_str(), "%u", &bodies_n);
 
-        while (getline(fh, line)) {
+        while (getline(input_fh, line)) {
             std::stringstream line_stream(line);
             std::string segment;
             std::vector<std::string> segs;
@@ -145,7 +146,7 @@ int main(int argc, char **argv) {
             }
         }
 
-        fh.close();
+        input_fh.close();
     }
 
     assert(bodies_n == bodies.size());
@@ -155,12 +156,14 @@ int main(int argc, char **argv) {
         bodies[i].m = masses[i];
     }
 
-    double t = 0; // XXX: optimization - source of truth, update both
+    double t = 0; // XXX: optimization - double source of truth, update both
     unsigned int step = 0;
 
-    dump_meta_info(bodies);
-    dump_masses(bodies);
-    dump_timestep(t, bodies);
+    FILE* output_fh = fopen(output_filename.c_str(), "r");
+
+    dump_meta_info(output_fh, bodies);
+    dump_masses(output_fh, bodies);
+    dump_timestep(output_fh, t, bodies);
 
     double start = cpu_time();
 
@@ -214,11 +217,12 @@ int main(int argc, char **argv) {
         step++;
 
         if (step % OUTPUT_STEP_INTERVAL == 0) {
-            dump_timestep(t, bodies);
+            dump_timestep(output_fh, t, bodies);
         }
     }
 
     fprintf(stderr, "Total CPU time is %lf\n", cpu_time() - start);
-
+    fclose(output_fh);
+    
     return 0;
 }
