@@ -9,31 +9,24 @@
 
 const double THETA = 0.5;
 
-QuadTree *new_QuadTree(double x, double y, double radius) {
-    QuadTree *self = (QuadTree *)malloc(sizeof(QuadTree));
-
-    self->x = x;
-    self->y = y;
-    self->radius = radius;
-
-    self->mx = 0;
-    self->my = 0;
-    self->m = 0;
-
-    self->occupant = nullptr;
-    self->ne = nullptr;
-    self->nw = nullptr;
-    self->sw = nullptr;
-    self->se = nullptr;
-
-    return self;
+QuadTree::QuadTree() {
 }
 
-bool within_bounds(QuadTree *self, const Body& body) {
-    auto radius = self->radius;
-    auto x = self->x;
-    auto y = self->y;
+QuadTree::QuadTree(double x, double y, double radius):
+    x(x),
+    y(y),
+    radius(radius),
+    mx(0),
+    my(0),
+    m(1),
+    ne(nullptr),
+    nw(nullptr),
+    sw(nullptr),
+    se(nullptr),
+    occupant(nullptr) {
+}
 
+bool QuadTree::within_bounds(const Body& body) {
     auto x_lower = x - radius;
     auto x_upper = x + radius;
     auto y_lower = y - radius;
@@ -45,18 +38,15 @@ bool within_bounds(QuadTree *self, const Body& body) {
     return x_bounded && y_bounded;
 }
 
-void subdivide(QuadTree *self) {
+void QuadTree::subdivide() {
     // this will be the radius of our children
-    auto r = self->radius / 2;
-
-    auto x = self->x;
-    auto y = self->y;
+    auto r = radius / 2;
 
     // (x, y, radius), love me positional calling semantics
-    self->ne = new_QuadTree(x + r, y + r, r);
-    self->nw = new_QuadTree(x - r, y + r, r);
-    self->se = new_QuadTree(x + r, y - r, r);
-    self->sw = new_QuadTree(x - r, y - r, r);
+    ne = new QuadTree(x + r, y + r, r);
+    nw = new QuadTree(x - r, y + r, r);
+    se = new QuadTree(x + r, y - r, r);
+    sw = new QuadTree(x - r, y - r, r);
 }
 
 /*  To calculate the net force acting on body b, use the following recursive procedure, 
@@ -81,18 +71,18 @@ void subdivide(QuadTree *self) {
     NB: Note that if θ = 0, then no internal node is treated as a single body, 
         and the algorithm degenerates to brute force.
 */
-void calculate_force(QuadTree* self, Body& body) {
+void QuadTree::calculate_force(Body& body) {
     // Case 1 - empty external node
-    if (self->occupant == nullptr && self->nw == nullptr) { 
+    if (occupant == nullptr && nw == nullptr) { 
         return;
     }
 
     // Case 2 - occupied external node
-    if (self->nw == nullptr) {
-        if (self->occupant == &body) {
+    if (nw == nullptr) {
+        if (occupant == &body) {
             return;
         } else {
-            auto& there = *self->occupant;
+            auto& there = *occupant;
         
             body.exert_force_unidirectionally(there);
 
@@ -101,27 +91,27 @@ void calculate_force(QuadTree* self, Body& body) {
     }
 
     // Case 3 - internal node
-    assert(self->occupant == nullptr && self->nw != nullptr);
+    assert(occupant == nullptr && nw != nullptr);
 
-    auto s = self-> radius * 2; // need width
-    auto d = distance(body.x, body.y, self->x, self->y);
+    auto s =  radius * 2; // need width
+    auto d = distance(body.x, body.y, x, y);
 
     if (s / d < THETA) {
         auto here = body;
 
         Body there = Body();
-        there.x = self->mx;
-        there.y = self->my;
-        there.m = self->m;
+        there.x = mx;
+        there.y = my;
+        there.m = m;
 
         here.exert_force_unidirectionally(there);
         return;
 
     } else {
-        calculate_force(self->nw, body);
-        calculate_force(self->ne, body);
-        calculate_force(self->sw, body);
-        calculate_force(self->se, body);
+        nw->calculate_force(body);
+        ne->calculate_force(body);
+        sw->calculate_force(body);
+        se->calculate_force(body);
 
         return;
     }
@@ -144,9 +134,9 @@ void calculate_force(QuadTree* self, Body& body) {
         Finally, update the center-of-mass and total mass of x.
 */
 
-bool insert_all(QuadTree *self, std::vector<Body>& bodies) {
+bool QuadTree::insert_all(std::vector<Body>& bodies) {
     for (auto& body : bodies) {
-        bool did_insert = insert(self, body);
+        bool did_insert = insert(body);
         if (!did_insert)
         {
             return false;
@@ -155,8 +145,8 @@ bool insert_all(QuadTree *self, std::vector<Body>& bodies) {
     return true;
 }
 
-bool insert(QuadTree *self, Body& body) {
-    if (!within_bounds(self, body)) {
+bool QuadTree::insert(Body& body) {
+    if (!within_bounds(body)) {
         return false;
     }
 
@@ -169,18 +159,18 @@ bool insert(QuadTree *self, Body& body) {
     // m = m1 + m2
     // mx = (x1m1 + x2m2) / m
     // my = (y1m1 + y2m2) / m
-    auto new_x_total = (self->mx * self->m) + (body.x * body.m);
-    auto new_y_total = (self->my * self->m) + (body.y * body.m);
+    auto new_x_total = (mx * m) + (body.x * body.m);
+    auto new_y_total = (my * m) + (body.y * body.m);
 
-    auto new_total_mass = self->m + body.m;
+    auto new_total_mass = m + body.m;
 
-    self->m = new_total_mass;
-    self->mx = new_x_total / new_total_mass;
-    self->my = new_y_total / new_total_mass;
+    m = new_total_mass;
+    mx = new_x_total / new_total_mass;
+    my = new_y_total / new_total_mass;
 
     // Case 1 - empty external node
-    if (self->occupant == nullptr && self->nw == nullptr) { 
-        self->occupant = &body;
+    if (occupant == nullptr && nw == nullptr) { 
+        occupant = &body;
 
         return true;
     }
@@ -188,36 +178,33 @@ bool insert(QuadTree *self, Body& body) {
     Body *displaced = nullptr;
 
     // Case 2 - occupied external node
-    if (self->nw == nullptr) {
-        assert(self->occupant != nullptr);
+    if (nw == nullptr) {
+        assert(occupant != nullptr);
 
-        displaced = self->occupant;
-        self->occupant = nullptr;
+        displaced = occupant;
+        occupant = nullptr;
 
-        // printf("Subdividing (%f, %f) dismissing (%f, %f) and adding (%f, %f)\n", 
-        // self->x, self->y, displaced->x, displaced->y, body.x, body.y);
-
-        subdivide(self);
+        subdivide();
     }
 
     bool displaced_insertion_success = false;
 
     // Cases 2 and 3 - newly subdivided external node and internal node
-    assert(self->occupant == nullptr);
+    assert(occupant == nullptr);
 
     if (displaced) {
         displaced_insertion_success = 
-               insert(self->nw, *displaced) 
-            || insert(self->ne, *displaced)
-            || insert(self->sw, *displaced)
-            || insert(self->se, *displaced);
+               nw->insert(*displaced) 
+            || ne->insert(*displaced)
+            || sw->insert(*displaced)
+            || se->insert(*displaced);
     }
 
     bool new_insertion_success = 
-           insert(self->nw, body) 
-        || insert(self->ne, body)
-        || insert(self->sw, body)
-        || insert(self->se, body);
+           nw->insert(body) 
+        || ne->insert(body)
+        || sw->insert(body)
+        || se->insert(body);
 
     assert(displaced_insertion_success || new_insertion_success);
 

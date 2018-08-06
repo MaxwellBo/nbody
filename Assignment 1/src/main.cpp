@@ -8,7 +8,7 @@
 #include "Body.hpp"
 #include "QuadTree.hpp"
 
-const double TIME_STEP = 0.2;
+const double TIME_STEP = 1;
 const double T_LAST = 150;
 const double INITIAL_SIMULATION_WIDTH = 2000;
 
@@ -167,23 +167,23 @@ int main(int argc, char **argv) {
     double start = cpu_time();
 
     while (t < T_LAST - TIME_STEP) {
-        QuadTree* root;
+        QuadTree root;
 
         if (!BRUTE_FORCE) {
             double root_x = 0;
             double root_y = 0;
             
-            root = new_QuadTree(root_x, root_y, INITIAL_SIMULATION_WIDTH / 2);
+            root = QuadTree(root_x, root_y, INITIAL_SIMULATION_WIDTH / 2);
             // the quad-tree uses half the width as an implementation detail
             // called "radius". Don't ask me why I picked such a stupid name.
 
             while (true) {
-                if (insert_all(root, bodies)) {
+                if (root.insert_all(bodies)) {
                     break;
                 }
 
-                auto simulation_radius = 2 * root->radius; 
-                root = new_QuadTree(root_x, root_y, simulation_radius);
+                auto simulation_radius = 2 * root.radius; 
+                root = QuadTree(root_x, root_y, simulation_radius);
             }
 
         }
@@ -192,7 +192,7 @@ int main(int argc, char **argv) {
             body.reset_force();
 
             if (!BRUTE_FORCE) {
-                calculate_force(root, body);
+                root.calculate_force(body);
             }
         }
 

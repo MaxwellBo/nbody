@@ -2,45 +2,28 @@
 #define _QuadTree_h
 #include "Body.hpp"
 
-// class QuadTree {
-//     public:
-//         // Constructors
-//         QuadTree(double x, double y);
-//         // Fields
-//         double x;
-//         double y;
-//         double radius;
-//         QuadTree* ne;
-//         QuadTree* nw;
-//         QuadTree* se;
-//         QuadTree* sw;
-//         Body& occupant;
-//         // Methods
-//         bool insert(Body& body);
-//         bool within_bounds(Body& body);
-//         void subdivide();
-// };
-
-typedef struct QuadTree {
-    double x;
-    double y;
-    double radius;
-    double mx;
-    double my;
-    double m;
-    Body *occupant;
-    QuadTree* ne;
-    QuadTree* nw;
-    QuadTree* se;
-    QuadTree* sw;
-} QuadTree;
-
-QuadTree *new_QuadTree(double x, double y, double radius);
-bool within_bounds(QuadTree *self, const Body& body);
-double distance(double x1, double y1, double x2, double y2);
-void subdivide(QuadTree *self);
-void calculate_force(QuadTree* self, Body& body);
-bool insert(QuadTree *self, Body& body);
-bool insert_all(QuadTree *self, std::vector<Body>& bodies);
-
+class QuadTree {
+    public:
+        // Constructors
+        QuadTree();
+        QuadTree(double x, double y, double radius);
+        // Fields
+        double x;
+        double y;
+        double radius;
+        double mx;
+        double my;
+        double m;
+        QuadTree* ne;
+        QuadTree* nw;
+        QuadTree* se;
+        QuadTree* sw;
+        Body *occupant;
+        // Methods
+        bool insert(Body& body);
+        bool insert_all(std::vector<Body>& bodies);
+        bool within_bounds(const Body& body);
+        void subdivide();
+        void calculate_force(Body& body);
+};
 #endif
