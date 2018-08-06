@@ -2,6 +2,7 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <assert.h>
 #include <time.h>
 
 // #include "CImg.h"
@@ -165,7 +166,7 @@ int main(int argc, char **argv) {
     double t = 0; // XXX: optimization - double source of truth, update both
     unsigned int step = 0;
 
-    FILE* output_fh = fopen(output_filename.c_str(), "r");
+    FILE* output_fh = fopen(output_filename.c_str(), "w");
 
     dump_meta_info(output_fh, bodies);
     dump_masses(output_fh, bodies);

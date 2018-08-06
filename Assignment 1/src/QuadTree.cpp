@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cmath>
 #include <vector>
+#include <assert.h>
 
 #include "QuadTree.hpp"
 #include "Body.hpp"
