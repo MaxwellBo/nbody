@@ -93,18 +93,18 @@ void QuadTree::calculate_force(Body& body) {
     // Case 3 - internal node
     assert(occupant == nullptr && nw != nullptr);
 
-    auto s =  radius * 2; // need width
+    auto s = radius * 2; // need width
     auto d = distance(body.x, body.y, x, y);
 
     if (s / d < THETA) {
-        auto here = body;
+        Body pseudobody = Body();
+        pseudobody.x = mx;
+        pseudobody.y = my;
+        pseudobody.m = m;
 
-        Body there = Body();
-        there.x = mx;
-        there.y = my;
-        there.m = m;
+        // fprintf(stderr, "Coalesce tree rooted at (%lf, %lf)\n", x, y);
 
-        here.exert_force_unidirectionally(there);
+        body.exert_force_unidirectionally(pseudobody);
         return;
 
     } else {

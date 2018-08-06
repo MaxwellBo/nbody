@@ -2,7 +2,7 @@ import turtle
 import math
 from random import random
 
-FULL_SPEED = False
+FULL_SPEED = True
 
 class Body(object):
     def __init__(self, x, y, vx, vy):

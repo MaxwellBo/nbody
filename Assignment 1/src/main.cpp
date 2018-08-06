@@ -7,22 +7,30 @@
 // #include "CImg.h"
 #include "Body.hpp"
 #include "QuadTree.hpp"
-const unsigned int MINUTE = 60;
-const unsigned int HOUR = MINUTE * 60;
 
+const unsigned int MINUTE = 60;
+// const unsigned int HOUR = MINUTE * 60;
 const double TIME_STEP = 0.001; // millisecond precision
 const double T_LAST = 2 * MINUTE;
 const double INITIAL_SIMULATION_WIDTH = 2000;
-const double OUTPUT_TIME_INTERVAL = 1;
+const double OUTPUT_TIME_INTERVAL = 0.01;
 const unsigned int OUTPUT_STEP_INTERVAL = OUTPUT_TIME_INTERVAL / TIME_STEP;
-const bool   BRUTE_FORCE = false;
+
+const bool ENABLE_BARNES_HUT = true;
+const bool BRUTE_FORCE = !ENABLE_BARNES_HUT;
 
 double cpu_time(void) {
     return (double)clock() / (double)CLOCKS_PER_SEC;
 }
 
 double calculate_total_energy(const std::vector<Body>& bodies) {
-    return 1.0;
+    double acc = 0;
+
+    for (const auto& body: bodies) {
+        acc++; // TODO
+    }
+
+    return acc;
 }
 
 void dump_masses(FILE* file, const std::vector<Body>& bodies) {
@@ -132,8 +140,6 @@ int main(int argc, char **argv) {
                 double vx;
                 double vy; 
 
-                double mass;
-
                 if (sscanf(line.c_str(), "%lf %lf %lf %lf", &x, &y, &vx, &vy)) {
                     Body body = Body();
                     body.x = x;
@@ -183,7 +189,10 @@ int main(int argc, char **argv) {
                     break;
                 }
 
-                auto simulation_radius = 2 * root.radius; 
+                double simulation_radius = 2 * root.radius; 
+
+                fprintf(stderr, "Simulation expanded to %lf\n", simulation_radius);
+
                 root = QuadTree(root_x, root_y, simulation_radius);
             }
 
@@ -221,7 +230,7 @@ int main(int argc, char **argv) {
         }
     }
 
-    fprintf(stderr, "Total CPU time is %lf\n", cpu_time() - start);
+    printf("Total CPU time is %lf\n", cpu_time() - start);
     fclose(output_fh);
     
     return 0;
