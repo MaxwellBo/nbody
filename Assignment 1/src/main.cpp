@@ -14,7 +14,7 @@ const double INITIAL_SIMULATION_WIDTH = 2000;
 
 const bool BRUTE_FORCE = false;
 
-double cpu_time(void){
+double cpu_time(void) {
     double value;
 
     value = (double)clock() / (double)CLOCKS_PER_SEC;
@@ -22,28 +22,15 @@ double cpu_time(void){
     return value;
 }
 
-double calculate_total_energy(const std::vector<Body *>& bodies) {
+double calculate_total_energy(const std::vector<Body>& bodies) {
     return 1.0;
 }
 
-/*
-numBodies
-Mass1
-Mass2
-...
-massN
-0.00 totalEnergy
-x1 y1 vx1 vy1
-..
-xN yN vxN vyN
-*/
-void parse_input(const std::vector<Body *>& bodies) {
 
-}
-
-void dump_masses(const std::vector<Body *>& bodies) {
+void dump_masses(const std::vector<Body>& bodies) {
+    // HOW TO FETCH FROM ARRAY
     for (auto body: bodies) {
-        printf("%f\n", body->m);
+        printf("%f\n", body.m);
     }
 }
 
@@ -63,19 +50,19 @@ x1 y1 vx1 vy1
 ...
 xN yN vxN vyN
 */
-void dump_timestep(double timestamp, const std::vector<Body *>& bodies) {
-    double total_energy = 0;
+void dump_timestep(double timestamp, const std::vector<Body>& bodies) {
+    double total_energy = calculate_total_energy(bodies);
 
     printf("%f %f\n", timestamp, total_energy);
 
-    for (auto body: bodies) {
-        printf("%f %f %f %f\n", body->x, body->y, body->vx, body->vy);
+    for (const auto& body: bodies) {
+        printf("%f %f %f %f\n", body.x, body.y, body.vx, body.vy);
     }
 
     printf("\n");
 }
 
-void dump_meta_info(const std::vector<Body *>& bodies) {
+void dump_meta_info(const std::vector<Body>& bodies) {
     unsigned int bodies_n = bodies.size();
     unsigned int timesteps = T_LAST / TIME_STEP;
     double output_interval = TIME_STEP;
@@ -84,6 +71,17 @@ void dump_meta_info(const std::vector<Body *>& bodies) {
     printf("%d %d %f %f\n", bodies_n, timesteps, output_interval, delta_t); 
 }
 
+/*
+numBodies
+Mass1
+Mass2
+...
+massN
+0.00 totalEnergy
+x1 y1 vx1 vy1
+..
+xN yN vxN vyN
+*/
 int main(int argc, char **argv) {
     if (argc == 1) {
         printf("Please supply an input .csv file\n");
@@ -99,7 +97,7 @@ int main(int argc, char **argv) {
     unsigned int bodies_n = 0;
     
     std::vector<double> masses = {};
-    std::vector<Body *> bodies = {};
+    std::vector<Body> bodies = {};
 
     if (fh.is_open()) {
 
@@ -139,11 +137,11 @@ int main(int argc, char **argv) {
                 double mass;
 
                 if (sscanf(line.c_str(), "%lf %lf %lf %lf", &x, &y, &vx, &vy)) {
-                    Body *body = new Body();
-                    body->x = x;
-                    body->y = y;
-                    body->vx = vx;
-                    body->vy = vy;
+                    Body body = Body();
+                    body.x = x;
+                    body.y = y;
+                    body.vx = vx;
+                    body.vy = vy;
 
                     bodies.push_back(body);
                 } 
@@ -157,7 +155,7 @@ int main(int argc, char **argv) {
     assert(bodies_n == masses.size());
 
     for(size_t i = 0; i < bodies.size(); i++) {
-        bodies[i]->m = masses[i];
+        bodies[i].m = masses[i];
     }
 
     double t = 0;
@@ -191,7 +189,7 @@ int main(int argc, char **argv) {
         }
 
         for (auto& body: bodies) {
-            body->reset_force();
+            body.reset_force();
 
             if (!BRUTE_FORCE) {
                 calculate_force(root, body);
@@ -200,18 +198,18 @@ int main(int argc, char **argv) {
 
         if (BRUTE_FORCE) {
             for (size_t i = 0; i < bodies.size() - 1; i++) {
-                auto x = bodies[i];
+                auto& x = bodies[i];
 
                 for (size_t j = i + 1; j < bodies.size(); j++) {
-                    auto y = bodies[j];
-                    exert_force_unidirectionally(x, y);
-                    exert_force_unidirectionally(y, x);
+                    auto& y = bodies[j];
+                    x.exert_force_unidirectionally(y);
+                    y.exert_force_unidirectionally(x);
                 }
             }
         }
 
-        for (auto body: bodies) {
-            body->timestep(TIME_STEP);
+        for (auto& body: bodies) {
+            body.timestep(TIME_STEP);
         }
 
         t += TIME_STEP;

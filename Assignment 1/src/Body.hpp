@@ -20,6 +20,7 @@ class Body {
         Body();
         void timestep(double dt);
         void reset_force();
+        void exert_force_unidirectionally(const Body& there);
 };
 
 #endif

@@ -5,9 +5,9 @@
 
 #include "QuadTree.hpp"
 #include "Body.hpp"
+#include "utils.hpp"
 
 const double THETA = 0.5;
-const double G     = 10000; // N(m/kg) ^ 2
 
 QuadTree *new_QuadTree(double x, double y, double radius) {
     QuadTree *self = (QuadTree *)malloc(sizeof(QuadTree));
@@ -29,7 +29,7 @@ QuadTree *new_QuadTree(double x, double y, double radius) {
     return self;
 }
 
-bool within_bounds(QuadTree *self, Body *body) {
+bool within_bounds(QuadTree *self, const Body& body) {
     auto radius = self->radius;
     auto x = self->x;
     auto y = self->y;
@@ -39,36 +39,10 @@ bool within_bounds(QuadTree *self, Body *body) {
     auto y_lower = y - radius;
     auto y_upper = y + radius;
 
-    auto x_bounded = x_lower <= body->x && body->x < x_upper;
-    auto y_bounded = y_lower <= body->y && body->y < y_upper;
+    auto x_bounded = x_lower <= body.x && body.x < x_upper;
+    auto y_bounded = y_lower <= body.y && body.y < y_upper;
 
     return x_bounded && y_bounded;
-}
-
-double distance(double x1, double y1, double x2, double y2) {
-    double a2 = pow((x1 - x2), 2);
-    double b2 = pow((y1 - y2), 2);
-
-    return sqrt(a2 + b2);
-}
-
-void exert_force_unidirectionally(Body *here, Body *there) {
-    auto m1 = here->m;
-    auto m2 = there->m;
-    auto r = distance(here->x, here->y, there->x, there->y);
-    auto r2 = pow(r, 2);
-
-    auto F = G * ((m1 * m2) / r2);
-
-    auto delta_x = there->x - here->x;
-    auto delta_y = there->y - here->y;
-
-    // turn the vector between our two points into a force vector
-    // of the desired magnitude
-    auto scale_factor = F / r;
-
-    here->Fx += delta_x * scale_factor;
-    here->Fy += delta_y * scale_factor;
 }
 
 void subdivide(QuadTree *self) {
@@ -107,7 +81,7 @@ void subdivide(QuadTree *self) {
     NB: Note that if θ = 0, then no internal node is treated as a single body, 
         and the algorithm degenerates to brute force.
 */
-void calculate_force(QuadTree* self, Body* body) {
+void calculate_force(QuadTree* self, Body& body) {
     // Case 1 - empty external node
     if (self->occupant == nullptr && self->nw == nullptr) { 
         return;
@@ -115,13 +89,12 @@ void calculate_force(QuadTree* self, Body* body) {
 
     // Case 2 - occupied external node
     if (self->nw == nullptr) {
-        if (self->occupant == body) {
+        if (self->occupant == &body) {
             return;
         } else {
-            auto here = body;
-            auto there = self->occupant;
+            auto& there = *self->occupant;
         
-            exert_force_unidirectionally(here, there);
+            body.exert_force_unidirectionally(there);
 
             return;
         }
@@ -131,7 +104,7 @@ void calculate_force(QuadTree* self, Body* body) {
     assert(self->occupant == nullptr && self->nw != nullptr);
 
     auto s = self-> radius * 2; // need width
-    auto d = distance(body->x, body->y, self->x, self->y);
+    auto d = distance(body.x, body.y, self->x, self->y);
 
     if (s / d < THETA) {
         auto here = body;
@@ -141,7 +114,7 @@ void calculate_force(QuadTree* self, Body* body) {
         there.y = self->my;
         there.m = self->m;
 
-        exert_force_unidirectionally(here, &there);
+        here.exert_force_unidirectionally(there);
         return;
 
     } else {
@@ -171,8 +144,8 @@ void calculate_force(QuadTree* self, Body* body) {
         Finally, update the center-of-mass and total mass of x.
 */
 
-bool insert_all(QuadTree *self, std::vector<Body *> bodies) {
-    for (auto body : bodies) {
+bool insert_all(QuadTree *self, std::vector<Body>& bodies) {
+    for (auto& body : bodies) {
         bool did_insert = insert(self, body);
         if (!did_insert)
         {
@@ -182,7 +155,7 @@ bool insert_all(QuadTree *self, std::vector<Body *> bodies) {
     return true;
 }
 
-bool insert(QuadTree *self, Body *body) {
+bool insert(QuadTree *self, Body& body) {
     if (!within_bounds(self, body)) {
         return false;
     }
@@ -196,10 +169,10 @@ bool insert(QuadTree *self, Body *body) {
     // m = m1 + m2
     // mx = (x1m1 + x2m2) / m
     // my = (y1m1 + y2m2) / m
-    auto new_x_total = (self->mx * self->m) + (body->x * body->m);
-    auto new_y_total = (self->my * self->m) + (body->y * body->m);
+    auto new_x_total = (self->mx * self->m) + (body.x * body.m);
+    auto new_y_total = (self->my * self->m) + (body.y * body.m);
 
-    auto new_total_mass = self->m + body->m;
+    auto new_total_mass = self->m + body.m;
 
     self->m = new_total_mass;
     self->mx = new_x_total / new_total_mass;
@@ -207,7 +180,7 @@ bool insert(QuadTree *self, Body *body) {
 
     // Case 1 - empty external node
     if (self->occupant == nullptr && self->nw == nullptr) { 
-        self->occupant = body;
+        self->occupant = &body;
 
         return true;
     }
@@ -222,7 +195,7 @@ bool insert(QuadTree *self, Body *body) {
         self->occupant = nullptr;
 
         // printf("Subdividing (%f, %f) dismissing (%f, %f) and adding (%f, %f)\n", 
-        // self->x, self->y, displaced->x, displaced->y, body->x, body->y);
+        // self->x, self->y, displaced->x, displaced->y, body.x, body.y);
 
         subdivide(self);
     }
@@ -234,10 +207,10 @@ bool insert(QuadTree *self, Body *body) {
 
     if (displaced) {
         displaced_insertion_success = 
-               insert(self->nw, displaced) 
-            || insert(self->ne, displaced)
-            || insert(self->sw, displaced)
-            || insert(self->se, displaced);
+               insert(self->nw, *displaced) 
+            || insert(self->ne, *displaced)
+            || insert(self->sw, *displaced)
+            || insert(self->se, *displaced);
     }
 
     bool new_insertion_success = 

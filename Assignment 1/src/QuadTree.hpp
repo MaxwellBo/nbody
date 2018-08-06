@@ -36,12 +36,11 @@ typedef struct QuadTree {
 } QuadTree;
 
 QuadTree *new_QuadTree(double x, double y, double radius);
-bool within_bounds(QuadTree *self, Body *body);
+bool within_bounds(QuadTree *self, const Body& body);
 double distance(double x1, double y1, double x2, double y2);
 void subdivide(QuadTree *self);
-void calculate_force(QuadTree* self, Body *body);
-bool insert(QuadTree *self, Body *body);
-bool insert_all(QuadTree *self, std::vector<Body *> bodies);
-void exert_force_unidirectionally(Body *here, Body *there);
+void calculate_force(QuadTree* self, Body& body);
+bool insert(QuadTree *self, Body& body);
+bool insert_all(QuadTree *self, std::vector<Body>& bodies);
 
 #endif
