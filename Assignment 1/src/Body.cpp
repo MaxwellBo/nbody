@@ -20,8 +20,8 @@ void Body::timestep(double dt) {
     auto ay = Fy / m;
 
     // a = Δv / Δt
-    auto dvx = ax / dt;
-    auto dvy = ay / dt;
+    auto dvx = ax * dt;
+    auto dvy = ay * dt;
 
     vx += dvx;
     vy += dvy;

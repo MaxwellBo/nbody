@@ -13,7 +13,8 @@ const double INITIAL_SIMULATION_WIDTH = 2000;
 
 const bool BRUTE_FORCE = false;
 
-void calculate_total_energy(std::vector<Body *> bodies) {
+double calculate_total_energy(const std::vector<Body *>& bodies) {
+    return 1.0;
 }
 
 /*
@@ -27,11 +28,11 @@ x1 y1 vx1 vy1
 ..
 xN yN vxN vyN
 */
-void parse_input(std::vector<Body *> bodies) {
+void parse_input(const std::vector<Body *>& bodies) {
 
 }
 
-void dump_masses(std::vector<Body *> bodies) {
+void dump_masses(const std::vector<Body *>& bodies) {
     for (auto body: bodies) {
         printf("%f\n", body->m);
     }
@@ -53,7 +54,7 @@ x1 y1 vx1 vy1
 ...
 xN yN vxN vyN
 */
-void dump_timestep(double timestamp, std::vector<Body *> bodies) {
+void dump_timestep(double timestamp, const std::vector<Body *>& bodies) {
     double total_energy = 0;
 
     printf("%f %f\n", timestamp, total_energy);
@@ -65,9 +66,9 @@ void dump_timestep(double timestamp, std::vector<Body *> bodies) {
     printf("\n");
 }
 
-void dump_meta_info(std::vector<Body *> bodies) {
-    int bodies_n = bodies.size();
-    int timesteps = T_LAST / TIME_STEP;
+void dump_meta_info(const std::vector<Body *>& bodies) {
+    unsigned int bodies_n = bodies.size();
+    unsigned int timesteps = T_LAST / TIME_STEP;
     double output_interval = TIME_STEP;
     double delta_t = T_LAST;
 
@@ -85,7 +86,9 @@ int main(int argc, char **argv) {
     std::string line;
     std::ifstream fh(filename);
 
-    int bodies_n = 0;
+    unsigned int total_energy = 0;
+    unsigned int bodies_n = 0;
+    
     std::vector<double> masses = {};
     std::vector<Body *> bodies = {};
 
@@ -93,7 +96,7 @@ int main(int argc, char **argv) {
 
         // numBodies
         getline(fh, line);
-        sscanf(line.c_str(), "%d", &bodies_n);
+        sscanf(line.c_str(), "%u", &bodies_n);
 
         while (getline(fh, line)) {
             std::stringstream line_stream(line);
@@ -114,7 +117,8 @@ int main(int argc, char **argv) {
             } 
             // a total energy description
             else if (segs.size() == 2) { 
-                // TODO
+                double timestamp;
+                sscanf(line.c_str(), "%lf %u", &timestamp, &total_energy);
             }
             // a body
             else if (segs.size() == 4) {
@@ -175,7 +179,7 @@ int main(int argc, char **argv) {
 
         }
 
-        for (auto body: bodies) {
+        for (auto& body: bodies) {
             body->reset_force();
 
             if (!BRUTE_FORCE) {
