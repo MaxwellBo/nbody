@@ -2,7 +2,7 @@ import turtle
 import math
 from random import random
 
-FULL_SPEED = True
+FULL_SPEED = False
 
 class Body(object):
     def __init__(self, x, y, vx, vy):
@@ -30,7 +30,7 @@ def print_body_history(history: list, mass: float, colour: tuple):
 
     for step in history:
         turtle.goto(step.x, step.y)
-        turtle.dot(math.log(mass) * 2)
+        turtle.dot(math.log(mass / 1e12) * 10)
 
     # end the trace
     turtle.penup()
@@ -39,7 +39,7 @@ def print_timestep(timestep: Timestep, turtles: list, masses: list):
     for (t, body, mass) in zip(turtles, timestep.bodies, masses):
         t.goto(body.x, body.y)
         t.pendown()
-        t.dot(math.log(mass) * 4) # size
+        t.dot(math.log(mass / 1e14) * 4) # size
 
 def parse_body(line: str) -> Body:
     x, y, vx, vy = [ float(i) for i in line.split() ]

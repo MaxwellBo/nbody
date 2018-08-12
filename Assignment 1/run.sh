@@ -1,1 +1,1 @@
-make && ./nbody in out && pypy3 viz.py
+make && ./nbody $1 out && pypy3 viz.py

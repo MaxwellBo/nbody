@@ -14,11 +14,10 @@ const unsigned int MINUTE = 60;
 const double TIME_STEP = 0.001; // millisecond precision
 const double T_LAST = 2 * MINUTE;
 const double INITIAL_SIMULATION_WIDTH = 2000;
-const double OUTPUT_TIME_INTERVAL = 0.01;
+const double OUTPUT_TIME_INTERVAL = 0.1;
 const unsigned int OUTPUT_STEP_INTERVAL = OUTPUT_TIME_INTERVAL / TIME_STEP;
 
 const bool ENABLE_BARNES_HUT = true;
-const bool BRUTE_FORCE = !ENABLE_BARNES_HUT;
 
 double cpu_time(void) {
     return (double)clock() / (double)CLOCKS_PER_SEC;
@@ -177,7 +176,7 @@ int main(int argc, char **argv) {
     while (t < T_LAST - TIME_STEP) {
         QuadTree root;
 
-        if (!BRUTE_FORCE) {
+        if (ENABLE_BARNES_HUT) {
             double root_x = 0;
             double root_y = 0;
             
@@ -192,7 +191,7 @@ int main(int argc, char **argv) {
 
                 double simulation_radius = 2 * root.radius; 
 
-                fprintf(stderr, "Simulation expanded to %lf\n", simulation_radius);
+                // fprintf(stderr, "Simulation expanded to %lf\n", simulation_radius);
 
                 root = QuadTree(root_x, root_y, simulation_radius);
             }
@@ -202,12 +201,12 @@ int main(int argc, char **argv) {
         for (auto& body: bodies) {
             body.reset_force();
 
-            if (!BRUTE_FORCE) {
+            if (ENABLE_BARNES_HUT) {
                 root.calculate_force(body);
             }
         }
 
-        if (BRUTE_FORCE) {
+        if (!ENABLE_BARNES_HUT) {
             for (size_t i = 0; i < bodies.size() - 1; i++) {
                 auto& x = bodies[i];
 
