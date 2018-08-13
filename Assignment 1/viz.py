@@ -17,24 +17,6 @@ class Timestep(object):
         self.total_energy = total_energy
         self.bodies = bodies
 
-def print_body_history(history: list, mass: float, colour: tuple):
-    r, g, b = colour
-    turtle.pencolor(r, g, b)
-
-    # snap to start
-    turtle.penup()
-    turtle.goto(history[0].x, history[0].y)
-
-    # start the trace
-    turtle.pendown()
-
-    for step in history:
-        turtle.goto(step.x, step.y)
-        turtle.dot(math.log(mass / 1e12) * 10)
-
-    # end the trace
-    turtle.penup()
-
 def print_timestep(timestep: Timestep, turtles: list, masses: list):
     for (t, body, mass) in zip(turtles, timestep.bodies, masses):
         t.goto(body.x, body.y)
@@ -62,6 +44,7 @@ with open("out", "r") as f:
 
     turtles = [ turtle.Turtle() for i in range(bodies_n) ]
 
+    turtle.setworldcoordinates(llx=-100, lly=-100, urx=100, ury=100)
     turtle.hideturtle()
 
     if FULL_SPEED:

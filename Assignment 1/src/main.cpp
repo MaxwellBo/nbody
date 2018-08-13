@@ -14,7 +14,7 @@ const unsigned int MINUTE = 60;
 const double TIME_STEP = 0.001; // millisecond precision
 const double T_LAST = 2 * MINUTE;
 const double INITIAL_SIMULATION_WIDTH = 2000;
-const double OUTPUT_TIME_INTERVAL = 0.1;
+const double OUTPUT_TIME_INTERVAL = 0.01;
 const unsigned int OUTPUT_STEP_INTERVAL = OUTPUT_TIME_INTERVAL / TIME_STEP;
 
 const bool ENABLE_BARNES_HUT = true;
@@ -26,10 +26,21 @@ double cpu_time(void) {
 double calculate_total_energy(const std::vector<Body>& bodies) {
     double acc = 0;
 
-    for (const auto& body: bodies) {
-        acc++; // TODO
+    for (auto& body : bodies) {
+        acc += body.kinetic_energy();
     }
 
+    for (size_t i = 0; i < bodies.size() - 1; i++) {
+        auto& x = bodies[i];
+
+        for (size_t j = i + 1; j < bodies.size(); j++) {
+            auto& y = bodies[j];
+
+            acc += x.gravitational_potential_energy(y);
+            acc += y.gravitational_potential_energy(x);
+        }
+    }
+    
     return acc;
 }
 

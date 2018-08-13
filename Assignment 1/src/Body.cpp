@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <cmath>
 
 #include "Body.hpp"
 #include "utils.hpp"
@@ -17,8 +18,6 @@ Body::Body():
 }
 
 void Body::timestep(double dt) {
-    // printf("Step (%f, %f) to ", x, y);
-
     // F = ma
     double ax = Fx / m;
     double ay = Fy / m;
@@ -36,13 +35,23 @@ void Body::timestep(double dt) {
 
     x += dx;
     y += dy;
-
-    // printf("(%f, %f)\n", x, y);
 }
 
 void Body::reset_force() {
     Fx = 0;
     Fy = 0;
+}
+
+double Body::kinetic_energy() const {
+    double v2 = (vx * vx) + (vy * vy);
+
+    return (m * v2) / 2;
+}
+
+double Body::gravitational_potential_energy(const Body& there) const {
+    double R = distance(x, y, there.x, there.y); // final distance, aka, to edge
+
+    return (-G * m * there.m) / R;
 }
 
 void Body::exert_force_unidirectionally(const Body& there) {
@@ -56,7 +65,7 @@ void Body::exert_force_unidirectionally(const Body& there) {
     double delta_x = there.x - x;
     double delta_y = there.y - y;
 
-    // turn the vector between our two points into a force vector
+    // turn the displacement vector between our two points into a force vector
     // of the desired magnitude
     double scale_factor = F / r;
 
