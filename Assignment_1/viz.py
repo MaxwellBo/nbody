@@ -40,7 +40,7 @@ with open("out", "r") as f:
     timesteps = [ parse_timestep(i) for i in timestep_block.strip().split("\n\n") ]
 
     fig = plt.figure(figsize=(8, 8))
-    ax = plt.axes(xlim=(-200, 200), ylim=(-200, 200))
+    ax = plt.axes(xlim=(-400, 400), ylim=(-400, 400))
     sizes = [ math.log(mass / 1e14) * 4 for mass in masses ]
     colors = np.random.rand(bodies_n)
 
