@@ -10,18 +10,17 @@
 #include "QuadTree.hpp"
 
 const unsigned int MINUTE = 60;
-// const unsigned int HOUR = MINUTE * 60;
 const double TIMESTEP = 0.001; // millisecond precision
 const double HALFSTEP = TIMESTEP / 2;
-const double T_LAST = 2 * MINUTE;
+const double T_LAST = 60; // seconds  
 const double INITIAL_SIMULATION_WIDTH = 2000;
-const double OUTPUT_TIME_INTERVAL = 0.01;
+const double OUTPUT_TIME_INTERVAL = 1 / 30.0; 
 
-const bool ENABLE_BARNES_HUT = true;
+const bool ENABLE_BARNES_HUT = false;
 const bool ENABLE_LEAPFROG = true;
 
 const unsigned int OUTPUT_STEP_INTERVAL = 
-    OUTPUT_TIME_INTERVAL * ((ENABLE_LEAPFROG ? 2 : 1)) / TIMESTEP;
+    OUTPUT_TIME_INTERVAL * (ENABLE_LEAPFROG ? 2 : 1) / TIMESTEP;
 
 double cpu_time(void) {
     return (double)clock() / (double)CLOCKS_PER_SEC;

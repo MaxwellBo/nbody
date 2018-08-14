@@ -1,12 +1,11 @@
 import math
-import turtle
-from random import random
 import numpy as np
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
-FULL_SPEED = True
-TURTLE_ENABLED = True
+OUTPUT_TIME_INTERVAL = 1 / 30
 
 class Body(object):
     def __init__(self, x, y, vx, vy):
@@ -20,12 +19,6 @@ class Timestep(object):
         self.timestamp = timestamp
         self.total_energy = total_energy
         self.bodies = bodies
-
-def print_timestep(timestep: Timestep, turtles: list, masses: list):
-    for (t, body, mass) in zip(turtles, timestep.bodies, masses):
-        t.goto(body.x, body.y)
-        t.pendown()
-        t.dot(math.log(mass / 1e14) * 4) # size
 
 def parse_body(line: str) -> Body:
     x, y, vx, vy = [ float(i) for i in line.split() ]
@@ -48,44 +41,28 @@ with open("out", "r") as f:
 
     timestep_block = "\n".join(contents.split('\n')[bodies_n + 1:])
     timesteps = [ parse_timestep(i) for i in timestep_block.strip().split("\n\n") ]
-    print((len(timesteps) * interval) - interval, timestep_n)
 
-    if TURTLE_ENABLED:
-        turtles = [ turtle.Turtle() for i in range(bodies_n) ]
-        
-        turtle.setworldcoordinates(llx=-100, lly=-100, urx=100, ury=100)
-        turtle.hideturtle()
+    fig = plt.figure()
+    ax = plt.axes(xlim=(-100, 100), ylim=(-100, 100))
+    sizes = [ math.log(mass / 1e14) * 4 for mass in masses ]
+    colors = np.random.rand(bodies_n)
 
-        if FULL_SPEED:
-            turtle.tracer(0, 0)
+    particles = ax.scatter([], [], s=sizes, c=colors)
 
-        turtle.speed(0)
+    def animate(t):
+        timestep = timesteps[t]
 
-        for t in turtles:
-            r, g, b = random(), random(), random()
-            t.hideturtle()
-            t.penup()
-            t.pencolor(r, g, b)
-            
-        turtle.done()
-    else:
-        fig = plt.figure()
-        ax = plt.axes(xlim=(-100, 100), ylim=(-100, 100))
-        particles, = ax.plot([], [], 'bo')
+        ax.scatter(
+            [particle.x for particle in timestep.bodies], 
+            [particle.y for particle in timestep.bodies],
+            s=sizes,
+            c=colors
+        )
 
-        def animate(t):
-            timestep = timesteps[t]
+        return particles,
 
-            particles.set_data(
-                [particle.x for particle in timestep.bodies], 
-                [particle.y for particle in timestep.bodies]
-            )
-
-            return particles,
-
-        ani = animation.FuncAnimation(fig, animate, frames=np.arange(0, len(timesteps)),
-                                    interval=25, blit=True)
-        # ani.save('line.gif', dpi=80, writer='imagemagick')
-        plt.show()
-
-
+    ani = animation.FuncAnimation(fig, animate, frames=np.arange(0, len(timesteps)),
+                                interval=OUTPUT_TIME_INTERVAL * 1000)
+    # writer = animation.FFMpegWriter(fps=30)
+    # ani.save('out.mp4', writer=writer)
+    plt.show()
