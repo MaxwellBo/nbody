@@ -18,7 +18,7 @@ const double INITIAL_SIMULATION_WIDTH = 2000;
 const double OUTPUT_TIME_INTERVAL = 0.01;
 
 const bool ENABLE_BARNES_HUT = true;
-const bool ENABLE_LEAPFROG = false;
+const bool ENABLE_LEAPFROG = true;
 
 const unsigned int OUTPUT_STEP_INTERVAL = 
     OUTPUT_TIME_INTERVAL * ((ENABLE_LEAPFROG ? 2 : 1)) / TIMESTEP;

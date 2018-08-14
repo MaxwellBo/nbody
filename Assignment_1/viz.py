@@ -1,8 +1,12 @@
-import turtle
 import math
+import turtle
 from random import random
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 
 FULL_SPEED = True
+TURTLE_ENABLED = True
 
 class Body(object):
     def __init__(self, x, y, vx, vy):
@@ -42,33 +46,46 @@ with open("out", "r") as f:
     masses = [ float(i) for i in contents.split('\n')[1:bodies_n + 1] ]
     assert(len(masses) == bodies_n)
 
-    turtles = [ turtle.Turtle() for i in range(bodies_n) ]
-
-    turtle.setworldcoordinates(llx=-100, lly=-100, urx=100, ury=100)
-    turtle.hideturtle()
-
-    if FULL_SPEED:
-        turtle.tracer(0, 0)
-
-    turtle.speed(0)
-
-    for t in turtles:
-        r, g, b = random(), random(), random()
-        t.hideturtle()
-        t.penup()
-        t.pencolor(r, g, b)
-
     timestep_block = "\n".join(contents.split('\n')[bodies_n + 1:])
     timesteps = [ parse_timestep(i) for i in timestep_block.strip().split("\n\n") ]
     print((len(timesteps) * interval) - interval, timestep_n)
 
-    # transpose = list(zip(*timesteps))
-    # for (n, body_history) in enumerate(transpose):
-    #     print_body_history(body_history, masses[n], colours[n])
+    if TURTLE_ENABLED:
+        turtles = [ turtle.Turtle() for i in range(bodies_n) ]
+        
+        turtle.setworldcoordinates(llx=-100, lly=-100, urx=100, ury=100)
+        turtle.hideturtle()
 
-    for timestep in timesteps:
-        print_timestep(timestep, turtles, masses)
+        if FULL_SPEED:
+            turtle.tracer(0, 0)
 
-    turtle.done()
+        turtle.speed(0)
+
+        for t in turtles:
+            r, g, b = random(), random(), random()
+            t.hideturtle()
+            t.penup()
+            t.pencolor(r, g, b)
+            
+        turtle.done()
+    else:
+        fig = plt.figure()
+        ax = plt.axes(xlim=(-100, 100), ylim=(-100, 100))
+        particles, = ax.plot([], [], 'bo')
+
+        def animate(t):
+            timestep = timesteps[t]
+
+            particles.set_data(
+                [particle.x for particle in timestep.bodies], 
+                [particle.y for particle in timestep.bodies]
+            )
+
+            return particles,
+
+        ani = animation.FuncAnimation(fig, animate, frames=np.arange(0, len(timesteps)),
+                                    interval=25, blit=True)
+        # ani.save('line.gif', dpi=80, writer='imagemagick')
+        plt.show()
 
 
