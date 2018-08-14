@@ -17,7 +17,7 @@ Body::Body():
     Fy(0) {
 }
 
-void Body::timestep(double dt) {
+void Body::euler_integrate(double dt) {
     // F = ma
     double ax = Fx / m;
     double ay = Fy / m;
@@ -35,6 +35,38 @@ void Body::timestep(double dt) {
 
     x += dx;
     y += dy;
+}
+
+void Body::leap(double dt) {
+    x = x + (vx * dt);
+    y = y + (vy * dt);
+}
+
+void Body::frog(double dt) {
+    double ax = Fx / m;
+    double ay = Fy / m;
+
+    vx = vx + (ax * dt);
+    vy = vy + (ay * dt);
+}
+
+void Body::kick_drift(double dt) {
+    double ax = Fx / m;
+    double ay = Fy / m;
+
+    vx = vx + (ax * (dt / 2));
+    vy = vy + (ay * (dt / 2));
+
+    x = x + (vx * dt);
+    y = y + (vy * dt);
+}
+
+void Body::kick(double dt) {
+    double ax = Fx / m;
+    double ay = Fy / m;
+
+    vx = vx + (ax * (dt / 2));
+    vy = vy + (ay * (dt / 2));
 }
 
 void Body::reset_force() {

@@ -18,7 +18,11 @@ class Body {
         double Fy;
         
         Body();
-        void timestep(double dt);
+        void euler_integrate(double dt);
+        void kick_drift(double dt);
+        void kick(double dt);
+        void leap(double dt);
+        void frog(double dt);
         void reset_force();
         double kinetic_energy() const;
         double gravitational_potential_energy(const Body& there) const;

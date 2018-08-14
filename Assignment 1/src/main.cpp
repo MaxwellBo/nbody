@@ -11,13 +11,17 @@
 
 const unsigned int MINUTE = 60;
 // const unsigned int HOUR = MINUTE * 60;
-const double TIME_STEP = 0.001; // millisecond precision
+const double TIMESTEP = 0.001; // millisecond precision
+const double HALFSTEP = TIMESTEP / 2;
 const double T_LAST = 2 * MINUTE;
 const double INITIAL_SIMULATION_WIDTH = 2000;
 const double OUTPUT_TIME_INTERVAL = 0.01;
-const unsigned int OUTPUT_STEP_INTERVAL = OUTPUT_TIME_INTERVAL / TIME_STEP;
 
 const bool ENABLE_BARNES_HUT = true;
+const bool ENABLE_LEAPFROG = false;
+
+const unsigned int OUTPUT_STEP_INTERVAL = 
+    OUTPUT_TIME_INTERVAL * ((ENABLE_LEAPFROG ? 2 : 1)) / TIMESTEP;
 
 double cpu_time(void) {
     return (double)clock() / (double)CLOCKS_PER_SEC;
@@ -80,7 +84,7 @@ void dump_timestep(FILE* file, double timestamp, const std::vector<Body>& bodies
 
 void dump_meta_info(FILE* file, const std::vector<Body>& bodies) {
     unsigned int bodies_n = bodies.size();
-    unsigned int timesteps = T_LAST / TIME_STEP;
+    unsigned int timesteps = T_LAST / TIMESTEP;
     double output_interval = OUTPUT_TIME_INTERVAL;
     double delta_t = T_LAST;
 
@@ -184,7 +188,7 @@ int main(int argc, char **argv) {
 
     double start = cpu_time();
 
-    while (t < T_LAST - TIME_STEP) {
+    while (t < T_LAST - TIMESTEP) {
         QuadTree root;
 
         if (ENABLE_BARNES_HUT) {
@@ -229,12 +233,27 @@ int main(int argc, char **argv) {
             }
         }
 
-        for (auto& body: bodies) {
-            body.timestep(TIME_STEP);
-        }
+        if (ENABLE_LEAPFROG) {
+            for (auto& body: bodies) {
+                if (step % 2 == 0) {
+                    body.leap(TIMESTEP);
+                }
+                else {
+                    body.frog(TIMESTEP);
+                }
+            }
 
-        t += TIME_STEP;
-        step++;
+            t += HALFSTEP;
+            step++;
+        } 
+        else {
+            for (auto& body: bodies) {
+                body.euler_integrate(TIMESTEP);
+            }
+
+            t += TIMESTEP;
+            step++;
+        }
 
         if (step % OUTPUT_STEP_INTERVAL == 0) {
             dump_timestep(output_fh, t, bodies);
