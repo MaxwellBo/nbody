@@ -185,6 +185,9 @@ int main(int argc, char **argv) {
     dump_masses(output_fh, bodies);
     dump_timestep(output_fh, t, bodies);
 
+    printf("Barnes-Hut enabled %s\n", ENABLE_BARNES_HUT ? "true" : "false");
+    printf("Leapfrog enabled %s\n", ENABLE_LEAPFROG ? "true" : "false");
+
     double start = cpu_time();
 
     while (t < T_LAST - TIMESTEP) {
@@ -259,7 +262,8 @@ int main(int argc, char **argv) {
         }
     }
 
-    printf("Total CPU time is %lf\n", cpu_time() - start);
+    printf("Total CPU time was %lf\n", cpu_time() - start);
+    printf("%d simulation steps computed\n", step);
     fclose(output_fh);
     
     return 0;
