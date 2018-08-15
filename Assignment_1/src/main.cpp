@@ -98,35 +98,17 @@ x1 y1 vx1 vy1
 ..
 xN yN vxN vyN
 */
-int main(int argc, char **argv) {
-    if (argc == 4) {
-        printf("numTimeSteps outputInterval deltaT inputFile\n");
-        exit(1);
-    }
-
-    const unsigned int num_time_steps = std::stoi(argv[1]);
-    const double output_interval = std::stod(argv[2]);
-    const double delta_t = std::stod(argv[3]);
-
-    const double timestep = delta_t / num_time_steps;
-    const double halfstep = timestep / 2;
-
-    const unsigned int output_step_interval = 
-        output_interval * (ENABLE_LEAPFROG ? 2 : 1) / timestep;
-
-    const std::string &input_filename = argv[4];
-
+void parse_input_file(
+    std::ifstream& input_fh,
+    std::vector<Body>& bodies
+) {
+    std::vector<double> masses = {};
     std::string line;
-    std::ifstream input_fh(input_filename);
 
     unsigned int total_energy = 0;
     unsigned int bodies_n = 0;
-    
-    std::vector<double> masses = {};
-    std::vector<Body> bodies = {};
 
     if (input_fh.is_open()) {
-
         // numBodies
         getline(input_fh, line);
         sscanf(line.c_str(), "%u", &bodies_n);
@@ -181,6 +163,30 @@ int main(int argc, char **argv) {
     for (size_t i = 0; i < bodies.size(); i++) {
         bodies[i].m = masses[i];
     }
+}
+
+int main(int argc, char **argv) {
+    if (argc == 4) {
+        printf("numTimeSteps outputInterval deltaT inputFile\n");
+        exit(1);
+    }
+
+    const unsigned int num_time_steps = std::stoi(argv[1]);
+    const double output_interval = std::stod(argv[2]);
+    const double delta_t = std::stod(argv[3]);
+
+    const double timestep = delta_t / num_time_steps;
+    const double halfstep = timestep / 2;
+
+    const unsigned int output_step_interval = 
+        output_interval * (ENABLE_LEAPFROG ? 2 : 1) / timestep;
+
+    const std::string &input_filename = argv[4];
+
+    std::ifstream input_fh(input_filename);
+    std::vector<Body> bodies = {};
+
+    parse_input_file(input_fh, bodies);
 
     double t = 0; // XXX: optimization - double source of truth, update both
     unsigned int step = 0;
