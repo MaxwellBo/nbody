@@ -50,8 +50,12 @@ with open("out", "r") as f:
         [particle.x for particle in timesteps[0].bodies], 
         [particle.y for particle in timesteps[0].bodies], 
         s=sizes,
-        c=colors
+        c=colors,
+        animated=True
     )
+
+    def init():
+        return particles,
 
     def animate(t):
         timestep = timesteps[t]
@@ -65,7 +69,7 @@ with open("out", "r") as f:
 
         return particles,
 
-    ani = animation.FuncAnimation(fig, animate, frames=np.arange(0, len(timesteps)),
-                                interval=interval * 1000, blit=False)
+    ani = animation.FuncAnimation(fig, animate, init_func=init, frames=np.arange(0, len(timesteps)),
+                                interval=interval * 1000, blit=True)
     # ani.save('out.gif', writer='imagemagick')
     plt.show()
