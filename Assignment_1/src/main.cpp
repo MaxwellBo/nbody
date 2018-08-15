@@ -12,18 +12,10 @@
 const unsigned int LEAP = 0;
 const unsigned int FROG = 1;
 
-const double TIMESTEP = 10e-6;
-const double T_LAST = 10; // seconds
-const double OUTPUT_TIME_INTERVAL = 1 / 60.0; 
-
 const bool ENABLE_BARNES_HUT = false;
 const bool ENABLE_LEAPFROG = true;
 
 const double INITIAL_SIMULATION_WIDTH = 200;
-const double HALFSTEP = TIMESTEP / 2;
-
-const unsigned int OUTPUT_STEP_INTERVAL = 
-    OUTPUT_TIME_INTERVAL * (ENABLE_LEAPFROG ? 2 : 1) / TIMESTEP;
 
 double cpu_time(void) {
     return (double)clock() / (double)CLOCKS_PER_SEC;
@@ -84,13 +76,16 @@ void dump_timestep(FILE* file, double timestamp, const std::vector<Body>& bodies
     fprintf(file, "\n");
 }
 
-void dump_meta_info(FILE* file, const std::vector<Body>& bodies) {
+void dump_meta_info(
+    unsigned int num_time_steps,
+    double output_interval,
+    double delta_t,
+    FILE* file, 
+    const std::vector<Body>& bodies
+) {
     unsigned int bodies_n = bodies.size();
-    unsigned int timesteps = T_LAST / TIMESTEP;
-    double output_interval = OUTPUT_TIME_INTERVAL;
-    double delta_t = T_LAST;
 
-    fprintf(file, "%d %d %f %f\n", bodies_n, timesteps, output_interval, delta_t); 
+    fprintf(file, "%d %d %f %f\n", bodies_n, num_time_steps, output_interval, delta_t); 
 }
 
 /*
@@ -105,13 +100,23 @@ x1 y1 vx1 vy1
 xN yN vxN vyN
 */
 int main(int argc, char **argv) {
-    if (argc == 2) {
-        printf("Please supply input and output filenames\n");
+    if (argc == 5) {
+        printf("numTimeSteps outputInterval deltaT inputFile outputFile\n");
         exit(1);
     }
 
-    const std::string &input_filename = argv[1];
-    const std::string &output_filename = argv[2];
+    const unsigned int num_time_steps = std::stoi(argv[1]);
+    const double output_interval = std::stod(argv[2]);
+    const double delta_t = std::stod(argv[3]);
+
+    const double timestep = delta_t / num_time_steps;
+    const double halfstep = timestep / 2;
+
+    const unsigned int output_step_interval = 
+        output_interval * (ENABLE_LEAPFROG ? 2 : 1) / timestep;
+
+    const std::string &input_filename = argv[4];
+    const std::string &output_filename = argv[5];
 
     std::string line;
     std::ifstream input_fh(input_filename);
@@ -184,7 +189,7 @@ int main(int argc, char **argv) {
 
     FILE* output_fh = fopen(output_filename.c_str(), "w");
 
-    dump_meta_info(output_fh, bodies);
+    dump_meta_info(num_time_steps, output_interval, delta_t, output_fh, bodies);
     dump_masses(output_fh, bodies);
     dump_timestep(output_fh, t, bodies);
 
@@ -193,7 +198,7 @@ int main(int argc, char **argv) {
 
     double start = cpu_time();
 
-    while (t < T_LAST - TIMESTEP) {
+    while (t < delta_t) {
         QuadTree root;
 
         if (ENABLE_BARNES_HUT && step % 2 == FROG) {
@@ -243,26 +248,26 @@ int main(int argc, char **argv) {
         if (ENABLE_LEAPFROG) {
             for (auto& body: bodies) {
                 if (step % 2 == LEAP) {
-                    body.leap(TIMESTEP);
+                    body.leap(timestep);
                 }
                 else {
-                    body.frog(TIMESTEP);
+                    body.frog(timestep);
                 }
             }
 
-            t += HALFSTEP;
+            t += halfstep;
             step++;
         } 
         else {
             for (auto& body: bodies) {
-                body.euler_integrate(TIMESTEP);
+                body.euler_integrate(timestep);
             }
 
-            t += TIMESTEP;
+            t += halfstep;
             step++;
         }
 
-        if (step % OUTPUT_STEP_INTERVAL == 0) {
+        if (step % output_step_interval == 0) {
             dump_timestep(output_fh, t, bodies);
         }
     }
