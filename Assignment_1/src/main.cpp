@@ -4,10 +4,13 @@
 #include <vector>
 #include <assert.h>
 #include <time.h>
+#include <algorithm>
+#include <limits>
 
 // #include "CImg.h"
 #include "Body.hpp"
 #include "QuadTree.hpp"
+#include "utils.hpp"
 
 const unsigned int LEAP = 0;
 const unsigned int FROG = 1;
@@ -15,10 +18,33 @@ const unsigned int FROG = 1;
 const bool ENABLE_BARNES_HUT = false;
 const bool ENABLE_LEAPFROG = true;
 
-const double INITIAL_SIMULATION_WIDTH = 200;
-
 double cpu_time(void) {
     return (double)clock() / (double)CLOCKS_PER_SEC;
+}
+
+double maximum_deviation_from_root(const std::vector<Body>& bodies) {
+    double lowest_x = std::numeric_limits<double>::max();
+    double highest_x = std::numeric_limits<double>::min();
+    double lowest_y = std::numeric_limits<double>::max();
+    double highest_y = std::numeric_limits<double>::min();
+
+    for (const auto& body: bodies) {
+        if (body.x < lowest_x) {
+            lowest_x = body.x;
+        }
+        else if (highest_x < body.x) {
+            highest_x = body.x;
+        }
+
+        if (body.y < lowest_y) {
+            lowest_y = body.y;
+        }
+        else if (highest_y < body.y) {
+            highest_y = body.y;
+        }
+    }
+
+    return std::max(highest_y - lowest_y, highest_x - lowest_x);
 }
 
 double calculate_total_energy(const std::vector<Body>& bodies) {
@@ -206,23 +232,14 @@ int main(int argc, char **argv) {
         if (ENABLE_BARNES_HUT && step % 2 == FROG) {
             double root_x = 0;
             double root_y = 0;
-            
-            root = QuadTree(root_x, root_y, INITIAL_SIMULATION_WIDTH / 2);
+            double radius = maximum_deviation_from_root(bodies) + 1;
             // the quad-tree uses half the width as an implementation detail
-            // called "radius". Don't ask me why I picked such a stupid name.
+            // called "radius". We're trying to make a QuadTree that encapsulates
+            // the most distant body
 
-            while (true) {
-                if (root.insert_all(bodies)) {
-                    break;
-                }
+            root = QuadTree(root_x, root_y, radius);
 
-                double simulation_radius = 2 * root.radius; 
-
-                // fprintf(stderr, "Simulation expanded to %lf\n", simulation_radius);
-
-                root = QuadTree(root_x, root_y, simulation_radius);
-            }
-
+            assert(root.insert_all(bodies));
         }
 
         if (!ENABLE_LEAPFROG || step % 2 == FROG) {

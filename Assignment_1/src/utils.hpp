@@ -2,5 +2,6 @@
 #define _utils_h
 
 double distance(double x1, double y1, double x2, double y2);
+double distance(const Body &here, const Body &there);
 
 #endif
