@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
 EDGE = 125
+SHOULD_EXPORT = False
 
 class Body(object):
     def __init__(self, x, y, vx, vy):
@@ -75,14 +76,16 @@ with open("out", "r") as f:
 
     fps = round(1 / interval)
 
-    print("Exporting at", fps, "FPS")
-    ani.save('out.mp4', writer=animation.FFMpegWriter(
-        fps=fps, 
-        metadata={
-            "artist": "Max Bo",
-            "title": "nbody"
-        }
-    )
-    )
-    # ani.save('out.gif', writer='imagemagick')
+    if SHOULD_EXPORT:
+        print("Exporting at", fps, "FPS")
+        ani.save('out.mp4', writer=animation.FFMpegWriter(
+            fps=fps, 
+            metadata={
+                "artist": "Max Bo",
+                "title": "nbody"
+            }
+        )
+        )
+        ani.save('out.gif', writer='imagemagick')
+
     plt.show()

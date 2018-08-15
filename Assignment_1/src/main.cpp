@@ -12,7 +12,7 @@
 const unsigned int LEAP = 0;
 const unsigned int FROG = 1;
 
-const double TIMESTEP = 10e-3;
+const double TIMESTEP = 10e-6;
 const double T_LAST = 10; // seconds
 const double OUTPUT_TIME_INTERVAL = 1 / 60.0; 
 
@@ -196,7 +196,7 @@ int main(int argc, char **argv) {
     while (t < T_LAST - TIMESTEP) {
         QuadTree root;
 
-        if (ENABLE_BARNES_HUT) {
+        if (ENABLE_BARNES_HUT && step % 2 == FROG) {
             double root_x = 0;
             double root_y = 0;
             
