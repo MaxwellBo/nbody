@@ -13,13 +13,14 @@ const unsigned int LEAP = 0;
 const unsigned int FROG = 1;
 
 const double TIMESTEP = 10e-3;
-const double HALFSTEP = TIMESTEP / 2;
 const double T_LAST = 10; // seconds
-const double INITIAL_SIMULATION_WIDTH = 200;
 const double OUTPUT_TIME_INTERVAL = 1 / 60.0; 
 
 const bool ENABLE_BARNES_HUT = false;
 const bool ENABLE_LEAPFROG = true;
+
+const double INITIAL_SIMULATION_WIDTH = 200;
+const double HALFSTEP = TIMESTEP / 2;
 
 const unsigned int OUTPUT_STEP_INTERVAL = 
     OUTPUT_TIME_INTERVAL * (ENABLE_LEAPFROG ? 2 : 1) / TIMESTEP;
