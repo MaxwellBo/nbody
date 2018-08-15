@@ -1,3 +1,6 @@
 { 'numTimeSteps': 6000000, 'inputFile': inputs/in_8_body_counterclockwise, 'numBodies': 8, 'time': 6.404529, 'leapfrog': true, 'barnesHut': false }
 ,
-{ 'numTimeSteps': 6000000, 'inputFile': inputs/in_8_body_counterclockwise, 'numBodies': 8, 'time': 6.827618, 'leapfrog': true, 'barnesHut': false }
+{ 'numTimeSteps': 6000000, 'inputFile': inputs/in_8_body_counterclockwise, 'numBodies': 8, 'time': 6.827618, 'leapfrog': true, 'barnesHut': false },
+{ 'numTimeSteps': 6000000, 'inputFile': inputs/in_4_body_counterclockwise, 'numBodies': 4, 'time': 17.735285, 'leapfrog': true, 'barnesHut': true },
+{ 'numTimeSteps': 6000000, 'inputFile': inputs/in_4_body_counterclockwise, 'numBodies': 4, 'time': 1.614483, 'leapfrog': true, 'barnesHut': false },
+{ 'numTimeSteps': 6000000, 'inputFile': inputs/in_4_body_counterclockwise, 'numBodies': 4, 'time': 1.715863, 'leapfrog': false, 'barnesHut': false }

@@ -16,7 +16,8 @@ const unsigned int LEAP = 0;
 const unsigned int FROG = 1;
 
 const bool ENABLE_BARNES_HUT = false;
-const bool ENABLE_LEAPFROG = true;
+const bool ENABLE_LEAPFROG = false;
+const bool ENABLE_LOGGING = true;
 
 double cpu_time(void) {
     return (double)clock() / (double)CLOCKS_PER_SEC;
@@ -294,18 +295,21 @@ int main(int argc, char **argv) {
 
     const double cpu_time_elapsed = cpu_time() - start;
 
-    fprintf(
-        log_fh,
-        ",\n{ 'numTimeSteps': %d, 'inputFile': %s, 'numBodies': %d, 'time': %lf, 'leapfrog': %s, 'barnesHut': %s }",
-        num_time_steps,
-        input_filename.c_str(),
-        static_cast<int>(bodies.size()), // thank-you Joel
-        cpu_time_elapsed,
-        ENABLE_LEAPFROG ? "true" : "false",
-        ENABLE_BARNES_HUT ? "true" : "false"
-    );
+    if (ENABLE_LOGGING) {
+        fprintf(
+            log_fh,
+            ",\n{ 'numTimeSteps': %d, 'inputFile': %s, 'numBodies': %d, 'time': %lf, 'leapfrog': %s, 'barnesHut': %s }",
+            num_time_steps,
+            input_filename.c_str(),
+            static_cast<int>(bodies.size()), // thank-you Joel
+            cpu_time_elapsed,
+            ENABLE_LEAPFROG ? "true" : "false",
+            ENABLE_BARNES_HUT ? "true" : "false"
+        );
+    }
 
     fprintf(stderr, "Total CPU time was %lf\n", cpu_time_elapsed);
+    fclose(log_fh);
     
     return 0;
 }
