@@ -71,5 +71,18 @@ with open("out", "r") as f:
 
     ani = animation.FuncAnimation(fig, animate, init_func=init, frames=np.arange(0, len(timesteps)),
                                 interval=interval * 1000, blit=True)
+
+
+    fps = round(1 / interval)
+
+    print("Exporting at", fps, "FPS")
+    ani.save('out.mp4', writer=animation.FFMpegWriter(
+        fps=fps, 
+        metadata={
+            "artist": "Max Bo",
+            "title": "nbody"
+        }
+    )
+    )
     # ani.save('out.gif', writer='imagemagick')
     plt.show()
