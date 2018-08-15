@@ -87,20 +87,44 @@ double Body::gravitational_potential_energy(const Body& there) const {
 }
 
 void Body::exert_force_unidirectionally(const Body& there) {
-    double m1 = m;
-    double m2 = there.m;
-    double r = distance(x, y, there.x, there.y);
-    double r2 = r * r;
+    const double m1 = m;
+    const double m2 = there.m;
 
-    double F = (G * m1 * m2) / r2;
+    const double delta_x = there.x - x;
+    const double delta_y = there.y - y;
 
-    double delta_x = there.x - x;
-    double delta_y = there.y - y;
+    const double r = hypot(delta_x, delta_y);
+    const double r2 = pow(r, 2);
+
+    const double F = (G * m1 * m2) / r2;
 
     // turn the displacement vector between our two points into a force vector
     // of the desired magnitude
-    double scale_factor = F / r;
+    const double scale_factor = F / r;
 
     Fx += delta_x * scale_factor;
     Fy += delta_y * scale_factor;
+}
+
+void Body::exert_force_bidirectionally(Body& there) {
+    const double m1 = m;
+    const double m2 = there.m;
+
+    const double delta_x = there.x - x;
+    const double delta_y = there.y - y;
+
+    const double r = hypot(delta_x, delta_y);
+    const double r2 = pow(r, 2);
+
+    const double F = (G * m1 * m2) / r2;
+
+    // turn the displacement vector between our two points into a force vector
+    // of the desired magnitude
+    const double scale_factor = F / r;
+
+    Fx += delta_x * scale_factor;
+    Fy += delta_y * scale_factor;
+
+    there.Fx -= delta_x * scale_factor;
+    there.Fy -= delta_y * scale_factor;
 }

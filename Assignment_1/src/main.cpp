@@ -215,6 +215,7 @@ int main(int argc, char **argv) {
     parse_input_file(input_fh, bodies);
 
     double t = 0; // XXX: optimization - double source of truth, update both
+    // TODO: can we have a function that inlines and updates both of these?
     unsigned int step = 0;
 
     dump_meta_info(num_time_steps, output_interval, delta_t, bodies);
@@ -258,8 +259,7 @@ int main(int argc, char **argv) {
 
                 for (size_t j = i + 1; j < bodies.size(); j++) {
                     auto& y = bodies[j];
-                    x.exert_force_unidirectionally(y);
-                    y.exert_force_unidirectionally(x);
+                    x.exert_force_bidirectionally(y);
                 }
             }
         }

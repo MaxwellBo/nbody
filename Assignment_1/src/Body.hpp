@@ -23,6 +23,7 @@ class Body {
         double kinetic_energy() const;
         double gravitational_potential_energy(const Body& there) const;
         void exert_force_unidirectionally(const Body& there);
+        void exert_force_bidirectionally(Body &there);
 };
 
 #endif
