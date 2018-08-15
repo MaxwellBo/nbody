@@ -91,7 +91,7 @@ x1 y1 vx1 vy1
 xN yN vxN vyN
 */
 void dump_timestep(double timestamp, const std::vector<Body>& bodies) {
-    double total_energy = calculate_total_energy(bodies);
+    const double total_energy = calculate_total_energy(bodies);
 
     fprintf(stdout, "%f %f\n", timestamp, total_energy);
 
@@ -108,7 +108,7 @@ void dump_meta_info(
     double delta_t,
     const std::vector<Body>& bodies
 ) {
-    unsigned int bodies_n = bodies.size();
+    const unsigned int bodies_n = bodies.size();
 
     fprintf(stdout, "%d %d %f %f\n", bodies_n, num_time_steps, output_interval, delta_t); 
 }
@@ -231,9 +231,9 @@ int main(int argc, char **argv) {
         QuadTree root;
 
         if (ENABLE_BARNES_HUT && step % 2 == FROG) {
-            double root_x = 0;
-            double root_y = 0;
-            double radius = maximum_deviation_from_root(bodies) + 1;
+            const double root_x = 0;
+            const double root_y = 0;
+            const double radius = maximum_deviation_from_root(bodies) + 1;
             // the quad-tree uses half the width as an implementation detail
             // called "radius". We're trying to make a QuadTree that encapsulates
             // the most distant body

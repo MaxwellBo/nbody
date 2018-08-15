@@ -19,19 +19,19 @@ Body::Body():
 
 void Body::euler_integrate(double dt) {
     // F = ma
-    double ax = Fx / m;
-    double ay = Fy / m;
+    const double ax = Fx / m;
+    const double ay = Fy / m;
 
     // a = Δv / Δt
-    double dvx = ax * dt;
-    double dvy = ay * dt;
+    const double dvx = ax * dt;
+    const double dvy = ay * dt;
 
     vx += dvx;
     vy += dvy;
 
     // v = s / t
-    double dx = vx * dt;
-    double dy = vy * dt;
+    const double dx = vx * dt;
+    const double dy = vy * dt;
 
     x += dx;
     y += dy;
@@ -43,16 +43,16 @@ void Body::leap(double dt) {
 }
 
 void Body::frog(double dt) {
-    double ax = Fx / m;
-    double ay = Fy / m;
+    const double ax = Fx / m;
+    const double ay = Fy / m;
 
     vx = vx + (ax * dt);
     vy = vy + (ay * dt);
 }
 
 void Body::kick_drift(double dt) {
-    double ax = Fx / m;
-    double ay = Fy / m;
+    const double ax = Fx / m;
+    const double ay = Fy / m;
 
     vx = vx + (ax * (dt / 2));
     vy = vy + (ay * (dt / 2));
@@ -62,8 +62,8 @@ void Body::kick_drift(double dt) {
 }
 
 void Body::kick(double dt) {
-    double ax = Fx / m;
-    double ay = Fy / m;
+    const double ax = Fx / m;
+    const double ay = Fy / m;
 
     vx = vx + (ax * (dt / 2));
     vy = vy + (ay * (dt / 2));
@@ -75,13 +75,13 @@ void Body::reset_force() {
 }
 
 double Body::kinetic_energy() const {
-    double v2 = (vx * vx) + (vy * vy);
+    const double v2 = (vx * vx) + (vy * vy);
 
     return (m * v2) / 2;
 }
 
 double Body::gravitational_potential_energy(const Body& there) const {
-    double R = distance(x, y, there.x, there.y); // final distance, aka, to edge
+    const double R = distance(x, y, there.x, there.y); // final distance, aka, to edge
 
     return (-G * m * there.m) / R;
 }

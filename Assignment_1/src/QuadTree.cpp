@@ -28,20 +28,20 @@ QuadTree::QuadTree(double x, double y, double radius):
 }
 
 bool QuadTree::within_bounds(const Body& body) const {
-    auto x_lower = x - radius;
-    auto x_upper = x + radius;
-    auto y_lower = y - radius;
-    auto y_upper = y + radius;
+    const double x_lower = x - radius;
+    const double x_upper = x + radius;
+    const double y_lower = y - radius;
+    const double y_upper = y + radius;
 
-    auto x_bounded = x_lower <= body.x && body.x < x_upper;
-    auto y_bounded = y_lower <= body.y && body.y < y_upper;
+    const double x_bounded = x_lower <= body.x && body.x < x_upper;
+    const double y_bounded = y_lower <= body.y && body.y < y_upper;
 
     return x_bounded && y_bounded;
 }
 
 void QuadTree::subdivide() {
     // this will be the radius of our children
-    auto r = radius / 2;
+    const double r = radius / 2;
 
     // (x, y, radius), love me positional calling semantics
     ne = new QuadTree(x + r, y + r, r);
@@ -94,16 +94,14 @@ void QuadTree::calculate_force(Body& body) {
     // Case 3 - internal node
     assert(occupant == nullptr && nw != nullptr);
 
-    auto s = radius * 2; // need width
-    auto d = distance(body.x, body.y, x, y);
+    const double s = radius * 2; // need width
+    const double d = distance(body.x, body.y, x, y);
 
     if (s / d < THETA) {
         Body pseudobody = Body();
         pseudobody.x = mx;
         pseudobody.y = my;
         pseudobody.m = m;
-
-        // fprintf(stderr, "Coalesce tree rooted at (%lf, %lf)\n", x, y);
 
         body.exert_force_unidirectionally(pseudobody);
         return;
@@ -137,7 +135,7 @@ void QuadTree::calculate_force(Body& body) {
 
 bool QuadTree::insert_all(std::vector<Body>& bodies) {
     for (auto& body : bodies) {
-        bool did_insert = insert(body);
+        const bool did_insert = insert(body);
         if (!did_insert)
         {
             return false;
@@ -160,10 +158,10 @@ bool QuadTree::insert(Body& body) {
     // m = m1 + m2
     // mx = (x1m1 + x2m2) / m
     // my = (y1m1 + y2m2) / m
-    auto new_x_total = (mx * m) + (body.x * body.m);
-    auto new_y_total = (my * m) + (body.y * body.m);
+    const double new_x_total = (mx * m) + (body.x * body.m);
+    const double new_y_total = (my * m) + (body.y * body.m);
 
-    auto new_total_mass = m + body.m;
+    const double new_total_mass = m + body.m;
 
     m = new_total_mass;
     mx = new_x_total / new_total_mass;
@@ -201,7 +199,7 @@ bool QuadTree::insert(Body& body) {
             || se->insert(*displaced);
     }
 
-    bool new_insertion_success = 
+    const bool new_insertion_success = 
            nw->insert(body) 
         || ne->insert(body)
         || sw->insert(body)
