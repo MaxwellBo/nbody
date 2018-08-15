@@ -42,9 +42,9 @@ double calculate_total_energy(const std::vector<Body>& bodies) {
     return acc;
 }
 
-void dump_masses(FILE* file, const std::vector<Body>& bodies) {
+void dump_masses(const std::vector<Body>& bodies) {
     for (const auto& body: bodies) {
-        fprintf(file, "%f\n", body.m);
+        fprintf(stdout, "%f\n", body.m);
     }
 }
 
@@ -64,28 +64,27 @@ x1 y1 vx1 vy1
 ...
 xN yN vxN vyN
 */
-void dump_timestep(FILE* file, double timestamp, const std::vector<Body>& bodies) {
+void dump_timestep(double timestamp, const std::vector<Body>& bodies) {
     double total_energy = calculate_total_energy(bodies);
 
-    fprintf(file, "%f %f\n", timestamp, total_energy);
+    fprintf(stdout, "%f %f\n", timestamp, total_energy);
 
     for (const auto& body: bodies) {
-        fprintf(file, "%f %f %f %f\n", body.x, body.y, body.vx, body.vy);
+        fprintf(stdout, "%f %f %f %f\n", body.x, body.y, body.vx, body.vy);
     }
 
-    fprintf(file, "\n");
+    fprintf(stdout, "\n");
 }
 
 void dump_meta_info(
     unsigned int num_time_steps,
     double output_interval,
     double delta_t,
-    FILE* file, 
     const std::vector<Body>& bodies
 ) {
     unsigned int bodies_n = bodies.size();
 
-    fprintf(file, "%d %d %f %f\n", bodies_n, num_time_steps, output_interval, delta_t); 
+    fprintf(stdout, "%d %d %f %f\n", bodies_n, num_time_steps, output_interval, delta_t); 
 }
 
 /*
@@ -100,8 +99,8 @@ x1 y1 vx1 vy1
 xN yN vxN vyN
 */
 int main(int argc, char **argv) {
-    if (argc == 5) {
-        printf("numTimeSteps outputInterval deltaT inputFile outputFile\n");
+    if (argc == 4) {
+        printf("numTimeSteps outputInterval deltaT inputFile\n");
         exit(1);
     }
 
@@ -116,7 +115,6 @@ int main(int argc, char **argv) {
         output_interval * (ENABLE_LEAPFROG ? 2 : 1) / timestep;
 
     const std::string &input_filename = argv[4];
-    const std::string &output_filename = argv[5];
 
     std::string line;
     std::ifstream input_fh(input_filename);
@@ -187,14 +185,12 @@ int main(int argc, char **argv) {
     double t = 0; // XXX: optimization - double source of truth, update both
     unsigned int step = 0;
 
-    FILE* output_fh = fopen(output_filename.c_str(), "w");
+    dump_meta_info(num_time_steps, output_interval, delta_t, bodies);
+    dump_masses(bodies);
+    dump_timestep(t, bodies);
 
-    dump_meta_info(num_time_steps, output_interval, delta_t, output_fh, bodies);
-    dump_masses(output_fh, bodies);
-    dump_timestep(output_fh, t, bodies);
-
-    printf("Barnes-Hut enabled: %s\n", ENABLE_BARNES_HUT ? "true" : "false");
-    printf("Leapfrog enabled: %s\n", ENABLE_LEAPFROG ? "true" : "false");
+    fprintf(stderr, "Barnes-Hut enabled: %s\n", ENABLE_BARNES_HUT ? "true" : "false");
+    fprintf(stderr, "Leapfrog enabled: %s\n", ENABLE_LEAPFROG ? "true" : "false");
 
     double start = cpu_time();
 
@@ -268,13 +264,12 @@ int main(int argc, char **argv) {
         }
 
         if (step % output_step_interval == 0) {
-            dump_timestep(output_fh, t, bodies);
+            dump_timestep(t, bodies);
         }
     }
 
-    printf("Total CPU time was %lf\n", cpu_time() - start);
-    printf("%d simulation steps computed\n", step);
-    fclose(output_fh);
+    fprintf(stderr, "Total CPU time was %lf\n", cpu_time() - start);
+    fprintf(stderr, "%d simulation steps computed\n", step);
     
     return 0;
 }
