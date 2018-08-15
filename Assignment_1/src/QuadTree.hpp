@@ -22,7 +22,7 @@ class QuadTree {
         // Methods
         bool insert(Body& body);
         bool insert_all(std::vector<Body>& bodies);
-        bool within_bounds(const Body& body);
+        bool within_bounds(const Body& body) const;
         void subdivide();
         void calculate_force(Body& body);
 };

@@ -27,7 +27,7 @@ QuadTree::QuadTree(double x, double y, double radius):
     occupant(nullptr) {
 }
 
-bool QuadTree::within_bounds(const Body& body) {
+bool QuadTree::within_bounds(const Body& body) const {
     auto x_lower = x - radius;
     auto x_upper = x + radius;
     auto y_lower = y - radius;

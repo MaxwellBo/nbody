@@ -175,7 +175,7 @@ int main(int argc, char **argv) {
     assert(bodies_n == bodies.size());
     assert(bodies_n == masses.size());
 
-    for(size_t i = 0; i < bodies.size(); i++) {
+    for (size_t i = 0; i < bodies.size(); i++) {
         bodies[i].m = masses[i];
     }
 
