@@ -16,7 +16,7 @@ const unsigned int LEAP = 0;
 const unsigned int FROG = 1;
 
 const bool ENABLE_BARNES_HUT = false;
-const bool ENABLE_LEAPFROG = false;
+const bool ENABLE_LEAPFROG = true;
 const bool ENABLE_LOGGING = true;
 
 double cpu_time(void) {
@@ -298,7 +298,7 @@ int main(int argc, char **argv) {
     if (ENABLE_LOGGING) {
         fprintf(
             log_fh,
-            ",\n{ 'numTimeSteps': %d, 'inputFile': %s, 'numBodies': %d, 'time': %lf, 'leapfrog': %s, 'barnesHut': %s }",
+            ",\n{ 'numTimeSteps': %d, 'inputFile': '%s', 'numBodies': %d, 'time': %lf, 'leapfrog': %s, 'barnesHut': %s }",
             num_time_steps,
             input_filename.c_str(),
             static_cast<int>(bodies.size()), // thank-you Joel
