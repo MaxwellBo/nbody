@@ -1,3 +1,6 @@
+#!/usr/local/bin/python3
+__author__ = "Maxwell Bo (43926871)"
+
 import sys
 import math
 import numpy as np
@@ -30,63 +33,70 @@ def parse_timestep(block: str) -> Timestep:
 
     return Timestep(timestamp=timestamp, total_energy=total_energy, bodies=bodies)
 
-with open(sys.argv[1], "r") as f:
-    contents = f.read()
+def main():
+    if len(sys.argv) not in [1 + 1, 1 + 2]:
+        print("input [output]")
+        exit(1)
 
-    bodies_n, timestep_n, interval, delta_t = contents.split('\n')[0].split()
-    bodies_n, timestep_n, interval, delta_t = int(bodies_n), int(timestep_n), float(interval), float(delta_t)
-    print({"numBodies": bodies_n, "numTimeSteps": timestep_n, "outputInterval": interval, "deltaT": delta_t})
+    with open(sys.argv[1], "r") as f:
+        contents = f.read()
 
-    masses = [ float(i) for i in contents.split('\n')[1:bodies_n + 1] ]
-    assert(len(masses) == bodies_n)
+        bodies_n, timestep_n, interval, delta_t = contents.split('\n')[0].split()
+        bodies_n, timestep_n, interval, delta_t = int(bodies_n), int(timestep_n), float(interval), float(delta_t)
+        print({"numBodies": bodies_n, "numTimeSteps": timestep_n, "outputInterval": interval, "deltaT": delta_t})
 
-    timestep_block = "\n".join(contents.split('\n')[bodies_n + 1:])
-    timesteps = [ parse_timestep(i) for i in timestep_block.strip().split("\n\n") ]
+        masses = [ float(i) for i in contents.split('\n')[1:bodies_n + 1] ]
+        assert(len(masses) == bodies_n)
 
-    fig = plt.figure(figsize=(8, 8))
-    ax = plt.axes(xlim=(-EDGE, EDGE), ylim=(-EDGE, EDGE))
-    sizes = [ (math.log(mass / 1e14) + 1) * 10 for mass in masses ]
-    colors = np.random.rand(bodies_n)
+        timestep_block = "\n".join(contents.split('\n')[bodies_n + 1:])
+        timesteps = [ parse_timestep(i) for i in timestep_block.strip().split("\n\n") ]
 
-    particles = ax.scatter(
-        [particle.x for particle in timesteps[0].bodies], 
-        [particle.y for particle in timesteps[0].bodies], 
-        s=sizes,
-        c=colors,
-        animated=True
-    )
+        fig = plt.figure(figsize=(8, 8))
+        ax = plt.axes(xlim=(-EDGE, EDGE), ylim=(-EDGE, EDGE))
+        sizes = [ (math.log(mass / 1e14) + 1) * 10 for mass in masses ]
+        colors = np.random.rand(bodies_n)
 
-    def init():
-        return particles,
-
-    def animate(t):
-        timestep = timesteps[t]
-
-        xs = [particle.x for particle in timestep.bodies]
-        ys = [particle.y for particle in timestep.bodies]
-
-        xys = list(map(list, zip(*[xs, ys])))
-
-        particles.set_offsets(xys)
-
-        return particles,
-
-    ani = animation.FuncAnimation(fig, animate, init_func=init, frames=np.arange(0, len(timesteps)),
-                                interval=interval * 1000, blit=True)
-
-
-    fps = round(1 / interval)
-
-    if SHOULD_EXPORT:
-        print("Exporting at", fps, "FPS")
-        ani.save('out.mp4', writer=animation.FFMpegWriter(
-            fps=fps, 
-            metadata={
-                "artist": "Max Bo",
-                "title": "nbody"
-            }
+        particles = ax.scatter(
+            [particle.x for particle in timesteps[0].bodies], 
+            [particle.y for particle in timesteps[0].bodies], 
+            s=sizes,
+            c=colors,
+            animated=True
         )
-        )
-        ani.save('out.gif', writer='imagemagick')
 
-    plt.show()
+        def init():
+            return particles,
+
+        def animate(t):
+            timestep = timesteps[t]
+
+            xs = [particle.x for particle in timestep.bodies]
+            ys = [particle.y for particle in timestep.bodies]
+
+            xys = list(map(list, zip(*[xs, ys])))
+
+            particles.set_offsets(xys)
+
+            return particles,
+
+        ani = animation.FuncAnimation(fig, animate, init_func=init, frames=np.arange(0, len(timesteps)),
+                                    interval=interval * 1000, blit=True)
+
+        if len(sys.argv) == 1 + 2:
+            fps = round(1 / interval)
+
+            print("Exporting at", fps, "FPS")
+            ani.save(sys.argv[2], writer=animation.FFMpegWriter(
+                fps=fps, 
+                metadata={
+                    "artist": "Max Bo",
+                    "title": "nbody"
+                }
+            )
+            )
+            # ani.save('out.gif', writer='imagemagick')
+        else:
+            plt.show()
+
+if __name__ == "__main__":
+    main()

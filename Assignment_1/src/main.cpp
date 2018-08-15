@@ -166,8 +166,8 @@ void parse_input_file(
 }
 
 int main(int argc, char **argv) {
-    if (argc == 4) {
-        printf("numTimeSteps outputInterval deltaT inputFile\n");
+    if (argc != 5) {
+        fprintf(stderr, "numTimeSteps outputInterval deltaT inputFile\n");
         exit(1);
     }
 
