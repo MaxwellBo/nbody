@@ -9,7 +9,9 @@
 #include "Body.hpp"
 #include "QuadTree.hpp"
 
-const unsigned int MINUTE = 60;
+const unsigned int LEAP = 0;
+const unsigned int FROG = 1;
+
 const double TIMESTEP = 10e-3;
 const double HALFSTEP = TIMESTEP / 2;
 const double T_LAST = 10; // seconds
@@ -185,8 +187,8 @@ int main(int argc, char **argv) {
     dump_masses(output_fh, bodies);
     dump_timestep(output_fh, t, bodies);
 
-    printf("Barnes-Hut enabled %s\n", ENABLE_BARNES_HUT ? "true" : "false");
-    printf("Leapfrog enabled %s\n", ENABLE_LEAPFROG ? "true" : "false");
+    printf("Barnes-Hut enabled: %s\n", ENABLE_BARNES_HUT ? "true" : "false");
+    printf("Leapfrog enabled: %s\n", ENABLE_LEAPFROG ? "true" : "false");
 
     double start = cpu_time();
 
@@ -215,11 +217,13 @@ int main(int argc, char **argv) {
 
         }
 
-        for (auto& body: bodies) {
-            body.reset_force();
+        if (!ENABLE_LEAPFROG || step % 2 == FROG) {
+            for (auto& body: bodies) {
+                body.reset_force();
 
-            if (ENABLE_BARNES_HUT) {
-                root.calculate_force(body);
+                if (ENABLE_BARNES_HUT) {
+                    root.calculate_force(body);
+                }
             }
         }
 
@@ -237,7 +241,7 @@ int main(int argc, char **argv) {
 
         if (ENABLE_LEAPFROG) {
             for (auto& body: bodies) {
-                if (step % 2 == 0) {
+                if (step % 2 == LEAP) {
                     body.leap(TIMESTEP);
                 }
                 else {

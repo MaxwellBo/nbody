@@ -3,6 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
+EDGE = 125
+
 class Body(object):
     def __init__(self, x, y, vx, vy):
         self.x = x
@@ -40,27 +42,26 @@ with open("out", "r") as f:
     timesteps = [ parse_timestep(i) for i in timestep_block.strip().split("\n\n") ]
 
     fig = plt.figure(figsize=(8, 8))
-    ax = plt.axes(xlim=(-400, 400), ylim=(-400, 400))
-    sizes = [ math.log(mass / 1e14) * 4 for mass in masses ]
+    ax = plt.axes(xlim=(-EDGE, EDGE), ylim=(-EDGE, EDGE))
+    sizes = [ (math.log(mass / 1e14) + 1) * 10 for mass in masses ]
     colors = np.random.rand(bodies_n)
 
-    # particles = ax.scatter([], [], s=sizes, c=colors)
-    particles, = ax.plot([], [], 'bo')
+    particles = ax.scatter(
+        [particle.x for particle in timesteps[0].bodies], 
+        [particle.y for particle in timesteps[0].bodies], 
+        s=sizes,
+        c=colors
+    )
 
     def animate(t):
         timestep = timesteps[t]
 
-        # ax.scatter(
-        #     [particle.x for particle in timestep.bodies], 
-        #     [particle.y for particle in timestep.bodies],
-        #     s=sizes,
-        #     c=colors
-        # )
+        xs = [particle.x for particle in timestep.bodies]
+        ys = [particle.y for particle in timestep.bodies]
 
-        particles.set_data(
-            [particle.x for particle in timestep.bodies], 
-            [particle.y for particle in timestep.bodies]
-        )
+        xys = list(map(list, zip(*[xs, ys])))
+
+        particles.set_offsets(xys)
 
         return particles,
 
