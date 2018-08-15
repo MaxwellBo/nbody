@@ -1,3 +1,4 @@
+import sys
 import math
 import numpy as np
 import matplotlib.pyplot as plt
@@ -29,7 +30,7 @@ def parse_timestep(block: str) -> Timestep:
 
     return Timestep(timestamp=timestamp, total_energy=total_energy, bodies=bodies)
 
-with open("out", "r") as f:
+with open(sys.argv[1], "r") as f:
     contents = f.read()
 
     bodies_n, timestep_n, interval, delta_t = contents.split('\n')[0].split()
