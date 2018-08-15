@@ -210,6 +210,7 @@ int main(int argc, char **argv) {
     const std::string &input_filename = argv[4];
 
     std::ifstream input_fh(input_filename);
+    FILE *log_fh = fopen("nbody.log", "a");
     std::vector<Body> bodies = {};
 
     parse_input_file(input_fh, bodies);
@@ -291,8 +292,20 @@ int main(int argc, char **argv) {
         }
     }
 
-    fprintf(stderr, "Total CPU time was %lf\n", cpu_time() - start);
-    fprintf(stderr, "%d simulation steps computed\n", step);
+    const double cpu_time_elapsed = cpu_time() - start;
+
+    fprintf(
+        log_fh,
+        ",\n{ 'numTimeSteps': %d, 'inputFile': %s, 'numBodies': %d, 'time': %lf, 'leapfrog': %s, 'barnesHut': %s }",
+        num_time_steps,
+        input_filename.c_str(),
+        static_cast<int>(bodies.size()), // thank-you Joel
+        cpu_time_elapsed,
+        ENABLE_LEAPFROG ? "true" : "false",
+        ENABLE_BARNES_HUT ? "true" : "false"
+    );
+
+    fprintf(stderr, "Total CPU time was %lf\n", cpu_time_elapsed);
     
     return 0;
 }

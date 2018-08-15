@@ -1,0 +1,3 @@
+{ 'numTimeSteps': 6000000, 'inputFile': inputs/in_8_body_counterclockwise, 'numBodies': 8, 'time': 6.404529, 'leapfrog': true, 'barnesHut': false }
+,
+{ 'numTimeSteps': 6000000, 'inputFile': inputs/in_8_body_counterclockwise, 'numBodies': 8, 'time': 6.827618, 'leapfrog': true, 'barnesHut': false }
