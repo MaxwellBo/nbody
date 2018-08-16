@@ -84,7 +84,7 @@ def main():
 
         cursor = ax2.axvline(x = 0, animated=True)
         frames = np.arange(0, len(timesteps))
-        ax2.plot(frames, [timestep.total_energy for timestep in timesteps], "bo")
+        ax2.plot(frames, [timestep.total_energy for timestep in timesteps], "bo", markersize=2)
 
         def init():
             return particles, cursor
