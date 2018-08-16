@@ -58,7 +58,7 @@ def main():
         ##########
         # LAYOUT #
         ##########
-        fig = plt.figure(figsize=(8, 10))
+        fig = plt.figure(figsize=(6, 8))
         gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1]) 
 
         ax1 = plt.subplot(gs[0])
