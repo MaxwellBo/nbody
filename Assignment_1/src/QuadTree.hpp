@@ -1,6 +1,7 @@
 #ifndef _QuadTree_h
 #define _QuadTree_h
 #include "Body.hpp"
+#include <memory>
 
 class QuadTree {
     public:
