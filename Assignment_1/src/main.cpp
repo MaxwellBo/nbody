@@ -17,7 +17,7 @@ const unsigned int FROG = 1;
 
 const bool ENABLE_BARNES_HUT = false;
 const bool ENABLE_LEAPFROG = true;
-const bool ENABLE_LOGGING = true;
+const bool ENABLE_LOGGING = false;
 
 double cpu_time(void) {
     return (double)clock() / (double)CLOCKS_PER_SEC;
@@ -126,6 +126,7 @@ x1 y1 vx1 vy1
 xN yN vxN vyN
 */
 std::vector<Body> parse_input_file(std::ifstream& input_fh) {
+    // not a Body&; we want to maximise cache locality
     std::vector<Body> bodies = {};
     std::vector<double> masses = {};
     std::string line;

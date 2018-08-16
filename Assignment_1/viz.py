@@ -39,7 +39,9 @@ def main():
         print("input [output]")
         exit(1)
 
-    with open(sys.argv[1], "r") as f:
+    in_filename = sys.argv[1]
+
+    with open(in_filename, "r") as f:
         ###########
         # PARSING #
         ###########
@@ -47,7 +49,7 @@ def main():
 
         bodies_n, timestep_n, interval, delta_t = contents.split('\n')[0].split()
         bodies_n, timestep_n, interval, delta_t = int(bodies_n), int(timestep_n), float(interval), float(delta_t)
-        print({"numBodies": bodies_n, "numTimeSteps": timestep_n, "outputInterval": interval, "deltaT": delta_t})
+        print({"input": in_filename, "numBodies": bodies_n, "numTimeSteps": timestep_n, "outputInterval": interval, "deltaT": delta_t})
 
         masses = [ float(i) for i in contents.split('\n')[1:bodies_n + 1] ]
         assert(len(masses) == bodies_n)
@@ -114,8 +116,10 @@ def main():
 
         if len(sys.argv) == 1 + 2:
 
+            out_filename = sys.argv[2]
+
             print("Exporting at", fps, "FPS")
-            ani.save(sys.argv[2], writer=animation.FFMpegWriter(
+            ani.save(out_filename, writer=animation.FFMpegWriter(
                 fps=fps, 
                 metadata={
                     "artist": "Max Bo",

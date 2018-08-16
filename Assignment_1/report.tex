@@ -3,6 +3,7 @@
 \usepackage{fullpage}
 \usepackage[margin=1in]{geometry}
 \usepackage[utf8]{inputenc}
+\usepackage{amsmath}
 
 \usepackage{graphicx}
 \graphicspath{ {images/} }
@@ -22,23 +23,108 @@
 
 % Description of problem - readable and covers all salient points - /2
 \subsection*{Description}
+The task was to create a stock-standard, 2-dimensional gravitational $n$-body simulator. 
+All bodies were to be assumed to be point masses. The simulation was to be accurate, maintaining a constant total energy, and exhibiting phenomena such as apsidal precession. 
+The simulation was to accept arguments specifying the granularity of the simulation (number of time steps, number of instances of data export), and a file specifiying masses and their initial positions and velocities. 
+The simulation was to produce its output as fast as possible, with minimal slowdown with an increasing $n$ number of bodies. 
+
+The simulator did not need to handle collisions between bodies.
+The MS1 simulator was to be free of OpenMP multiprocessing, which would be implemented in preparation for the MS2 submission.
 
 % Description of implementation - is coherent and has sufficient depth and detail - /5
 \subsection*{Implementation}
 
+At a high-level, the initial naive simulator:
+
+\begin{enumerate}
+    \item Parsed input parameters and files
+    \item Constructed \texttt{Body} class instances, representing each point mass
+    \item Packed the \texttt{Body}s into a \texttt{std::vector<Body>}, to maximize cache locality
+    \item Calculated forces between all pairwise combinations of $n$-bodies ($O(n^2)$)
+    \item Performed Euler's method to derive new velocities and positions
+    \item Output all necessary data
+    \item \texttt{GOTO 4}
+\end{enumerate}
+
+By using a Quadtree, (`a tree datastructure in which each internal node has exactly four children') and the \textit{Barnes-Hut} algorithm\cite{barnes86a}, the total cost of force calculation could be reduced to $O(n \log n)$, by grouping close-together bodies and approximating forces between the singular grouped pseudo-body, and distant bodies. New Quadtrees were constructed on each seperate simulation step.
+
+Dehen and Read note that the Euler method `performs very poorly in practice', further noting that `errors are proportional to $\Delta t^2$'. They contrast it with the second-order leapfrog symplectic integrator, which is `heavily used in collisionless N-body applications'.\cite{dehen11a}
+
+Leapfrog can be expressed many in forms\cite{Skeel1993} including a synchronised form:
+
+\begin{align*}
+x_{i}&=x_{i-1}+v_{i-1/2}\,\Delta t\\
+a_{i}&=F(x_{i})\\
+v_{i+1/2}&=v_{i-1/2}+a_{i}\,\Delta t\\
+\end{align*}
+
+which only requires a single acceleration calculation per every two half timesteps (the timestep $\Delta t$ must be constant to maintain stability), and a `kick-drift-kick' form
+
+\begin{align*}
+v_{i+1/2}&=v_{i}+a_{i}{\frac {\Delta t}{2}}\\
+x_{i+1}&=x_{i}+v_{i+1/2}\Delta t\\
+v_{i+1}&=v_{i+1/2}+a_{i+1}{\frac {\Delta t}{2}}
+\end{align*}
+
+that is stable with variable timstepping, but incurs an additional acceleration calculation per every two half timesteps.
+
+The synchronised form was implemented, but attempts to implement the kick-drift-kick form, and variable timestepping, were left unfinished.
+
+Thus, the final implementation:
+
+\begin{enumerate}
+    \item Parsed input parameters and files
+    \item Constructed \texttt{Body} class instances, representing each point mass
+    \item Packed the \texttt{Body}s into a \texttt{std::vector<Body>}, to maximize cache locality
+    \item Inserted all \texttt{Body}s into a fresh \texttt{QuadTree} on full timesteps, traversing the \texttt{QuadTree} with every \texttt{Body} to calculate forces ($O(n \log n)$)
+    \item Performed the appropriate Leapfrog step to derive new velocities \textit{or} positions
+    \item Output all necessary data
+    \item \texttt{GOTO 4}
+\end{enumerate}
+
 % Why do you believe it is correct - /3
 \subsection*{Correctness}
+
+I personally believe that the simulation is \textit{mostly} right. By visualising the results with \texttt{matplotlib}, we see something that resembles an $n$-body simulator\footnote{and that's good enough for me}. Distressingly, the total energy of the system is not constant throughout the system. When bodies are in close proxmity, anomalous energies that are inconsistent with the energy curve are observed. Furthermore, simulations with higher numbers of bodies produce random low energy outliers, but have a smoother total energy curve. There seems to be no signfiicant difference between Euler method and Leapfrog, with respect to energy anomalies.
+
+
+\begin{figure}[b]
+\caption{Observed energy anomaly while bodies in close proxmity - Leapfrog}
+\centering
+\includegraphics[width=0.5\textwidth]{energy_anomaly}
+\end{figure} 
+
+\begin{figure}[b]
+\caption{Observed energy anomaly while bodies in close proxmity - Euler method}
+\centering
+\includegraphics[width=0.5\textwidth]{euler_energy_anomaly}
+\end{figure} 
+
+\begin{figure}[b]
+\caption{Observed energy anomaly while bodies in close proxmity - Euler method}
+\centering
+\includegraphics[width=0.5\textwidth]{euler_relaxed_energy_anomaly}
+\end{figure} 
+
+\begin{figure}[b]
+\caption{Observed energy anomaly - random outlier - Leapfrog}
+\centering
+\includegraphics[width=0.5\textwidth]{relaxed_energy_anomaly}
+\end{figure} 
 
 % Scaling or other performance discussion - /2
 \subsection*{Performance \& Scaling}
 
-The addition of the 
-\texttt{-march=native} compiler flag, which enables the use of all CPU specific instructions, provided no recognizable improvement in running time.
+Henceforth, the use of the `recognizable' refers to eyeballing the output data, and making no significant effort to investigate the data more rigorously.
 
-The use of the GCC and Clang Profile-Guided Optimisation features provided no recognizable improvement in running time.
+The addition of the 
+\texttt{-march=native} compiler flag, which enables the use of all CPU specific instructions, provided no recognizable improvement in running time, but was left enabled in the instance that it improved performance on \texttt{goliath}.
+
+The use of both th GCC and Clang Profile-Guided Optimisation features provided no recognizable improvement in running time.
 
 Distressingly, \texttt{-O0}, \texttt{-O1}, \texttt{-O2}, \texttt{-O3} showed no recognizable improvement in running time. \texttt{-Ofast} led to an -4\%-ish performance regression.
 
+By profiling with \texttt{callgrind}, we saw that execution was dominated by only one user-defined method. 
 
 \includegraphics[width=\textwidth]{profile}
 
@@ -46,26 +132,8 @@ Distressingly, \texttt{-O0}, \texttt{-O1}, \texttt{-O2}, \texttt{-O3} showed no 
 
 Two performance fixes were divised.
 
-\begin{lstlisting}
-void Body::exert_force_unidirectionally(const Body& there) {
-    double m1 = m;
-    double m2 = there.m;
-    double r = distance(x, y, there.x, there.y);
-    double r2 = r * r;
-
-    double F = (G * m1 * m2) / r2;
-
-    double delta_x = there.x - x;
-    double delta_y = there.y - y;
-
-    // turn the displacement vector between our two points into a force vector
-    // of the desired magnitude
-    double scale_factor = F / r;
-
-    Fx += delta_x * scale_factor;
-    Fy += delta_y * scale_factor;
-}
-\end{lstlisting}
+% \begin{lstlisting}
+% \end{lstlisting}
 
 Here, we are recalculating 
 
@@ -77,5 +145,9 @@ Leapfrog enabled: true
 Total CPU time was 13.938825
 12000001 simulation steps computed
 
+\medskip
+ 
+\bibliographystyle{ieeetr}
+\bibliography{bib}
 
 \end{document}
