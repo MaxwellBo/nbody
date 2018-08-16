@@ -3,6 +3,7 @@
 #include <cmath>
 #include <vector>
 #include <assert.h>
+#include <memory>
 
 #include "QuadTree.hpp"
 #include "Body.hpp"
