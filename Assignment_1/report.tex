@@ -124,26 +124,108 @@ The use of both th GCC and Clang Profile-Guided Optimisation features provided n
 
 Distressingly, \texttt{-O0}, \texttt{-O1}, \texttt{-O2}, \texttt{-O3} showed no recognizable improvement in running time. \texttt{-Ofast} led to an -4\%-ish performance regression.
 
-By profiling with \texttt{callgrind}, we saw that execution was dominated by only one user-defined method. 
+By profiling with \texttt{callgrind}, we saw that execution was dominated by only one incredibly costly user-defined method, with an exclusive cost of 26.33\% of total running time.
 
 \includegraphics[width=\textwidth]{profile}
 
-% The \texttt{exert_force_unidirectionally} method was an incredibly costly method, with an exclusive cost of 26.33\% of total running time.
+Performance fixes were divised.
 
-Two performance fixes were divised.
+\begin{verbatim}
+ void Body::exert_force_unidirectionally(const Body& there) {
+     const double m1 = m;
+     const double m2 = there.m;
 
-% \begin{lstlisting}
-% \end{lstlisting}
+     const double delta_x = there.x - x;
+     const double delta_y = there.y - y;
+     
+-    const double r = distance(x, y, there.x, there.y);
++    const double r = hypot(delta_x, delta_y);
+-    const double r2 = r * r;
++    const double r2 = pow(r, 2);
 
-Here, we are recalculating 
+     const double F = (G * m1 * m2) / r2;
 
+     // turn the displacement vector between our two points into a force vector
+     // of the desired magnitude
+     const double scale_factor = F / r;
 
-gcc -g -lstdc++ -Wall -pedantic -Wextra -std=c++11 -lm -O3 -march=native Body.o
-QuadTree.o main.o utils.o -o nbody
-Barnes-Hut enabled: false
-Leapfrog enabled: true
-Total CPU time was 13.938825
-12000001 simulation steps computed
+     Fx += delta_x * scale_factor;
+     Fy += dumpsdelta_y * scale_factor;
+ }
+\end{verbatim}
+
+Instead of recalculating $\Delta x$ and $\Delta y$ twice (the second time in \texttt{distance}), we calculate them only once and make a direct call to \texttt{hypot}, rather than making a call to \texttt{distance}. We also used the specialized \texttt{pow} provided by \texttt{cmath}. This yielded a recognizable 15\%ish performance improvement. 
+
+\begin{verbatim}
+diff --git a/Assignment_1/src/Body.cpp b/Assignment_1/src/Body.cpp
+
++void Body::exert_force_bidirectionally(Body& there) {
++    const double m1 = m;
++    const double m2 = there.m;
++
++    const double delta_x = there.x - x;
++    const double delta_y = there.y - y;
++
++    const double r = hypot(delta_x, delta_y);
++    const double r2 = pow(r, 2);
++
++    const double F = (G * m1 * m2) / r2;
++
++    // turn the displacement vector between our two points into a force vector
++    // of the desired magnitude
++    const double scale_factor = F / r;
++
++    Fx += delta_x * scale_factor;
++    Fy += delta_y * scale_factor;
++
++    there.Fx -= delta_x * scale_factor;
++    there.Fy -= delta_y * scale_factor;
++}
+
+diff --git a/Assignment_1/src/main.cpp b/Assignment_1/src/main.cpp
+@@ -258,8 +259,7 @@ int main(int argc, char **argv) {
+                 for (size_t j = i + 1; j < bodies.size(); j++) {
+                     auto& y = bodies[j];
+-                    x.exert_force_unidirectionally(y);
+-                    y.exert_force_unidirectionally(x);
++                    x.exert_force_bidirectionally(y);
+                 }
+             }
+         }
+\end{verbatim}
+
+This fix halved execution time, for obvious reasons.\footnote{I had to throw out all my old profile data}.
+
+\begin{verbatim}
+diff --git a/Assignment_1/src/Body.cpp b/Assignment_1/src/Body.cpp
+@@ -83,11 +82,11 @@ double Body::kinetic_energy() const {
+ double Body::gravitational_potential_energy(const Body& there) const {
+     const double R = distance(x, y, there.x, there.y); // final distance, aka, to edge
+
+-    return (-G * m * there.m) / R;
++    return (-Gm * there.m) / R;
+ }
+
+@@ -101,7 +100,7 @@ void Body::exert_force_unidirectionally(const Body& there) {
+
+-    const double F = (G * m1 * m2) / r2;
++    const double F = (Gm * m2) / r2;
+
+@@ -113,7 +112,6 @@ void Body::exert_force_unidirectionally(const Body& there) {
+
+-    const double F = (G * m1 * m2) / r2;
++    const double F = (Gm * m2) / r2;
+
+@@ -189,6 +189,7 @@ std::vector<Body> parse_input_file(std::ifstream& input_fh) {
+
+     for (size_t i = 0; i < bodies.size(); i++) {
+         bodies[i].m = masses[i];
++        bodies[i].Gm = G * masses[i];
+     }
+
+\end{verbatim}
+
+Precomputing $Gm$ yielded a 3\%ish performance improvement.
 
 \medskip
  
