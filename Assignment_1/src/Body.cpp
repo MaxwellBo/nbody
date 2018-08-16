@@ -90,6 +90,11 @@ void Body::exert_force_unidirectionally(const Body& there) {
     const double m1 = m;
     const double m2 = there.m;
 
+    // Rather than calling `distance`, we re-use Δx and Δy
+    // in a direct call to hypot and for the construction of our force vector
+    // this gives us around a +4% performance improvement, primarily because
+    // distance and exert_force_(un/b)idirectionally consume the majority of our
+    // CPU time
     const double delta_x = there.x - x;
     const double delta_y = there.y - y;
 
@@ -107,6 +112,7 @@ void Body::exert_force_unidirectionally(const Body& there) {
 }
 
 void Body::exert_force_bidirectionally(Body& there) {
+    // See exert_force_unidirectionally for inline commentary
     const double m1 = m;
     const double m2 = there.m;
 
@@ -118,8 +124,6 @@ void Body::exert_force_bidirectionally(Body& there) {
 
     const double F = (G * m1 * m2) / r2;
 
-    // turn the displacement vector between our two points into a force vector
-    // of the desired magnitude
     const double scale_factor = F / r;
 
     Fx += delta_x * scale_factor;

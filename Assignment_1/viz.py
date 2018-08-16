@@ -6,6 +6,7 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+import matplotlib.gridspec as gridspec
 
 EDGE = 125
 SHOULD_EXPORT = False
@@ -39,6 +40,9 @@ def main():
         exit(1)
 
     with open(sys.argv[1], "r") as f:
+        ###########
+        # PARSING #
+        ###########
         contents = f.read()
 
         bodies_n, timestep_n, interval, delta_t = contents.split('\n')[0].split()
@@ -51,12 +55,26 @@ def main():
         timestep_block = "\n".join(contents.split('\n')[bodies_n + 1:])
         timesteps = [ parse_timestep(i) for i in timestep_block.strip().split("\n\n") ]
 
-        fig = plt.figure(figsize=(8, 8))
-        ax = plt.axes(xlim=(-EDGE, EDGE), ylim=(-EDGE, EDGE))
+        ##########
+        # LAYOUT #
+        ##########
+        fig = plt.figure(figsize=(6, 8))
+        gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1]) 
+
+        ax1 = plt.subplot(gs[0])
+        ax1.set_xlim(-EDGE, EDGE)
+        ax1.set_ylim(-EDGE, EDGE)
+
+        ax2 = plt.subplot(gs[1])
+
+        plt.tight_layout()
+
+        ############
+        # PLOTTING #
+        ############
         sizes = [ (math.log(mass / 1e14) + 1) * 10 for mass in masses ]
         colors = np.random.rand(bodies_n)
-
-        particles = ax.scatter(
+        particles = ax1.scatter(
             [particle.x for particle in timesteps[0].bodies], 
             [particle.y for particle in timesteps[0].bodies], 
             s=sizes,
@@ -64,8 +82,12 @@ def main():
             animated=True
         )
 
+        cursor = ax2.axvline(x = 0, animated=True)
+        frames = np.arange(0, len(timesteps))
+        ax2.plot(frames, [timestep.total_energy for timestep in timesteps], "bo", markersize=2)
+
         def init():
-            return particles,
+            return particles, cursor
 
         def animate(t):
             timestep = timesteps[t]
@@ -77,9 +99,11 @@ def main():
 
             particles.set_offsets(xys)
 
-            return particles,
+            cursor.set_xdata(t)
 
-        ani = animation.FuncAnimation(fig, animate, init_func=init, frames=np.arange(0, len(timesteps)),
+            return particles, cursor
+
+        ani = animation.FuncAnimation(fig, animate, init_func=init, frames=frames,
                                     interval=interval * 1000, blit=True)
 
         if len(sys.argv) == 1 + 2:
