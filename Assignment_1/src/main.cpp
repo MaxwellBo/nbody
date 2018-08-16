@@ -125,10 +125,8 @@ x1 y1 vx1 vy1
 ..
 xN yN vxN vyN
 */
-void parse_input_file(
-    std::ifstream& input_fh,
-    std::vector<Body>& bodies
-) {
+std::vector<Body> parse_input_file(std::ifstream& input_fh) {
+    std::vector<Body> bodies = {};
     std::vector<double> masses = {};
     std::string line;
 
@@ -184,12 +182,16 @@ void parse_input_file(
         input_fh.close();
     }
 
+    // we're going to throw bodies_n away here and let the Body vector
+    // be the source of truth for how many we have
     assert(bodies_n == bodies.size());
     assert(bodies_n == masses.size());
 
     for (size_t i = 0; i < bodies.size(); i++) {
         bodies[i].m = masses[i];
     }
+
+    return bodies;
 }
 
 int main(int argc, char **argv) {
@@ -212,9 +214,8 @@ int main(int argc, char **argv) {
 
     std::ifstream input_fh(input_filename);
     FILE *log_fh = fopen("nbody.log", "a");
-    std::vector<Body> bodies = {};
 
-    parse_input_file(input_fh, bodies);
+    std::vector<Body> bodies = parse_input_file(input_fh);
 
     double t = 0; // XXX: optimization - double source of truth, update both
     // TODO: can we have a function that inlines and updates both of these?
