@@ -17,7 +17,7 @@ const unsigned int FROG = 1;
 
 const bool ENABLE_BARNES_HUT = true;
 const bool ENABLE_LEAPFROG = true;
-const bool ENABLE_LOGGING = true;
+const bool ENABLE_LOGGING = false;
 
 double cpu_time(void) {
     return (double)clock() / (double)CLOCKS_PER_SEC;
