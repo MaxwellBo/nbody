@@ -62,10 +62,13 @@ def main():
         gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1]) 
 
         ax1 = plt.subplot(gs[0])
+        ax1.set_title(sys.argv[1])
         ax1.set_xlim(-EDGE, EDGE)
         ax1.set_ylim(-EDGE, EDGE)
+        ax1.set(xlabel="x (m)", ylabel="y (m)")
 
         ax2 = plt.subplot(gs[1])
+        ax2.set(xlabel="t (s)", ylabel="Energy (J)")
 
         plt.tight_layout()
 
@@ -83,14 +86,17 @@ def main():
         )
 
         cursor = ax2.axvline(x = 0, animated=True)
+        fps = round(1 / interval)
         frames = np.arange(0, len(timesteps))
-        ax2.plot(frames, [timestep.total_energy for timestep in timesteps], "bo", markersize=2)
+        time = np.true_divide(frames, fps)
+
+        ax2.plot(time, [timestep.total_energy for timestep in timesteps], "bo", markersize=2)
 
         def init():
             return particles, cursor
 
-        def animate(t):
-            timestep = timesteps[t]
+        def animate(step):
+            timestep = timesteps[step]
 
             xs = [particle.x for particle in timestep.bodies]
             ys = [particle.y for particle in timestep.bodies]
@@ -99,7 +105,7 @@ def main():
 
             particles.set_offsets(xys)
 
-            cursor.set_xdata(t)
+            cursor.set_xdata(step / fps)
 
             return particles, cursor
 
@@ -107,7 +113,6 @@ def main():
                                     interval=interval * 1000, blit=True)
 
         if len(sys.argv) == 1 + 2:
-            fps = round(1 / interval)
 
             print("Exporting at", fps, "FPS")
             ani.save(sys.argv[2], writer=animation.FFMpegWriter(
