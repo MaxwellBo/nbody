@@ -189,6 +189,7 @@ std::vector<Body> parse_input_file(std::ifstream& input_fh) {
 
     for (size_t i = 0; i < bodies.size(); i++) {
         bodies[i].m = masses[i];
+        bodies[i].Gm = G * masses[i];
     }
 
     return bodies;
@@ -299,7 +300,7 @@ int main(int argc, char **argv) {
     if (ENABLE_LOGGING) {
         fprintf(
             log_fh,
-            ",\n{ 'numTimeSteps': %d, 'inputFile': '%s', 'numBodies': %d, 'time': %lf, 'leapfrog': %s, 'barnesHut': %s }",
+            ",\n{ 'numTimeSteps': %d, 'inputFile': '%s', 'numBodies': %d, 'time': %lf, 'leapfrog': %s, 'barnesHut': %s, 'precomputedGm': true }",
             num_time_steps,
             input_filename.c_str(),
             static_cast<int>(bodies.size()), // thank-you Joel

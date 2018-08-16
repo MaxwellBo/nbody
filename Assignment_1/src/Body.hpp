@@ -1,9 +1,12 @@
 #ifndef _Body_h
 #define _Body_h
 
+const double G = 6.674e-11; // N(m/kg) ^ 2
+
 class Body {
     public:
         double m;
+        double Gm;
         // Position
         double x;
         double y;

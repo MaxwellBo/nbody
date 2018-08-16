@@ -5,10 +5,9 @@
 #include "Body.hpp"
 #include "utils.hpp"
 
-const double G = 6.674e-11; // N(m/kg) ^ 2
-
 Body::Body():
     m(1),
+    Gm(G * m),
     x(0),
     y(0),
     vx(0),
@@ -83,11 +82,11 @@ double Body::kinetic_energy() const {
 double Body::gravitational_potential_energy(const Body& there) const {
     const double R = distance(x, y, there.x, there.y); // final distance, aka, to edge
 
-    return (-G * m * there.m) / R;
+    return (-Gm * there.m) / R;
 }
 
 void Body::exert_force_unidirectionally(const Body& there) {
-    const double m1 = m;
+    // const double m1 = m; We have a precomputed Gm that we're going to use
     const double m2 = there.m;
 
     // Rather than calling `distance`, we re-use Δx and Δy
@@ -101,7 +100,7 @@ void Body::exert_force_unidirectionally(const Body& there) {
     const double r = hypot(delta_x, delta_y);
     const double r2 = pow(r, 2);
 
-    const double F = (G * m1 * m2) / r2;
+    const double F = (Gm * m2) / r2;
 
     // turn the displacement vector between our two points into a force vector
     // of the desired magnitude
@@ -113,7 +112,6 @@ void Body::exert_force_unidirectionally(const Body& there) {
 
 void Body::exert_force_bidirectionally(Body& there) {
     // See exert_force_unidirectionally for inline commentary
-    const double m1 = m;
     const double m2 = there.m;
 
     const double delta_x = there.x - x;
@@ -122,7 +120,7 @@ void Body::exert_force_bidirectionally(Body& there) {
     const double r = hypot(delta_x, delta_y);
     const double r2 = pow(r, 2);
 
-    const double F = (G * m1 * m2) / r2;
+    const double F = (Gm * m2) / r2;
 
     const double scale_factor = F / r;
 
