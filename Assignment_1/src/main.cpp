@@ -286,7 +286,7 @@ int main(int argc, char **argv) {
                 body.euler_integrate(timestep);
             }
 
-            t += halfstep;
+            t += timestep;
             step++;
         }
 
