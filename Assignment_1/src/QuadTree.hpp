@@ -14,10 +14,10 @@ class QuadTree {
         double mx;
         double my;
         double m;
-        QuadTree* ne;
-        QuadTree* nw;
-        QuadTree* se;
-        QuadTree* sw;
+        std::shared_ptr<QuadTree> ne;
+        std::shared_ptr<QuadTree> nw;
+        std::shared_ptr<QuadTree> se;
+        std::shared_ptr<QuadTree> sw;
         Body *occupant;
         // Methods
         bool insert(Body& body);

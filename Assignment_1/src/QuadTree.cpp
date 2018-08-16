@@ -13,18 +13,19 @@ const double THETA = 0.5;
 QuadTree::QuadTree() {
 }
 
-QuadTree::QuadTree(double x, double y, double radius):
+QuadTree::QuadTree(double x, double y, double radius): 
     x(x),
     y(y),
     radius(radius),
     mx(0),
     my(0),
     m(1),
-    ne(nullptr),
-    nw(nullptr),
-    se(nullptr),
-    sw(nullptr),
-    occupant(nullptr) {
+    ne(std::shared_ptr<QuadTree>()),
+    nw(std::shared_ptr<QuadTree>()),
+    se(std::shared_ptr<QuadTree>()),
+    sw(std::shared_ptr<QuadTree>()),
+    occupant(nullptr)
+{
 }
 
 bool QuadTree::within_bounds(const Body& body) const {
@@ -44,10 +45,10 @@ void QuadTree::subdivide() {
     const double r = radius / 2;
 
     // (x, y, radius), love me positional calling semantics
-    ne = new QuadTree(x + r, y + r, r);
-    nw = new QuadTree(x - r, y + r, r);
-    se = new QuadTree(x + r, y - r, r);
-    sw = new QuadTree(x - r, y - r, r);
+    ne = std::make_shared<QuadTree>(x + r, y + r, r);
+    nw = std::make_shared<QuadTree>(x - r, y + r, r);
+    se = std::make_shared<QuadTree>(x + r, y - r, r);
+    sw = std::make_shared<QuadTree>(x - r, y - r, r);
 }
 
 /*  To calculate the net force acting on body b, use the following recursive procedure, 
@@ -132,7 +133,6 @@ void QuadTree::calculate_force(Body& body) {
         there may be several subdivisions during a single insertion.
         Finally, update the center-of-mass and total mass of x.
 */
-
 bool QuadTree::insert_all(std::vector<Body>& bodies) {
     for (auto& body : bodies) {
         const bool did_insert = insert(body);
