@@ -6,11 +6,9 @@
 { 'numTimeSteps': 6000000, 'inputFile': 'inputs/in_12_body_counterclockwise', 'numBodies': 12, 'time': 14.487931, 'leapfrog': false, 'barnesHut': false },
 { 'numTimeSteps': 6000000, 'inputFile': 'inputs/in_12_body_counterclockwise', 'numBodies': 12, 'time': 14.514313, 'leapfrog': false, 'barnesHut': false },
 { 'numTimeSteps': 6000000, 'inputFile': 'inputs/in_12_body_counterclockwise', 'numBodies': 12, 'time': 14.212347, 'leapfrog': true, 'barnesHut': false },
-{ 'numTimeSteps': 6000000, 'inputFile': 'inputs/in_12_body_counterclockwise', 'numBodies': 12, 'time': 14.105369, 'leapfrog': true, 'barnesHut': false }
-,
+{ 'numTimeSteps': 6000000, 'inputFile': 'inputs/in_12_body_counterclockwise', 'numBodies': 12, 'time': 14.105369, 'leapfrog': true, 'barnesHut': false },
 { 'numTimeSteps': 600000, 'inputFile': 'inputs/in_12_body_counterclockwise', 'numBodies': 12, 'time': 11.732407, 'leapfrog': true, 'barnesHut': true },
 { 'numTimeSteps': 600000, 'inputFile': 'inputs/in_12_body_counterclockwise', 'numBodies': 12, 'time': 11.058139, 'leapfrog': true, 'barnesHut': true },
 { 'numTimeSteps': 600000, 'inputFile': 'inputs/in_12_body_counterclockwise', 'numBodies': 12, 'time': 11.394734, 'leapfrog': true, 'barnesHut': true },
-{ 'numTimeSteps': 600000, 'inputFile': 'inputs/in_12_body_counterclockwise_relaxed', 'numBodies': 12, 'time': 12.322676, 'leapfrog': true, 'barnesHut': true },
 { 'numTimeSteps': 600000, 'inputFile': 'inputs/in_12_body_counterclockwise_relaxed', 'numBodies': 12, 'time': 9.794258, 'leapfrog': true, 'barnesHut': true },
 { 'numTimeSteps': 600000, 'inputFile': 'inputs/in_12_body_counterclockwise_relaxed', 'numBodies': 12, 'time': 9.405269, 'leapfrog': true, 'barnesHut': true }
