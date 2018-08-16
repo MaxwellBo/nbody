@@ -51,12 +51,41 @@ def main():
         timestep_block = "\n".join(contents.split('\n')[bodies_n + 1:])
         timesteps = [ parse_timestep(i) for i in timestep_block.strip().split("\n\n") ]
 
-        fig = plt.figure(figsize=(8, 8))
-        ax = plt.axes(xlim=(-EDGE, EDGE), ylim=(-EDGE, EDGE))
+        # import numpy as np
+        # import matplotlib.pyplot as plt 
+        # from matplotlib import gridspec
+
+        # # generate some data
+        # x = np.arange(0, 10, 0.2)
+        # y = np.sin(x)
+
+        # # plot it
+        # fig = plt.figure(figsize=(8, 6)) 
+        # gs = gridspec.GridSpec(1, 2, width_ratios=[3, 1]) 
+        # ax0 = plt.subplot(gs[0])
+        # ax0.plot(x, y)
+        # ax1 = plt.subplot(gs[1])
+        # ax1.plot(y, x)
+
+        # plt.tight_layout()
+        # plt.savefig('grid_figure.pdf')
+
+        fig = plt.figure(figsize=(8, 12))
+
+        ax1 = fig.add_subplot(211)
+        ax2 = fig.add_subplot(212)
+
+        ax1.set_xlim(-EDGE, EDGE)
+        ax1.set_ylim(-EDGE, EDGE)
+
+        # ax1.figure.set_size_inches(8, 8, forward=True)
+
         sizes = [ (math.log(mass / 1e14) + 1) * 10 for mass in masses ]
         colors = np.random.rand(bodies_n)
 
-        particles = ax.scatter(
+        cursor = ax2.axvline(x = 0, animated=True)
+
+        particles = ax1.scatter(
             [particle.x for particle in timesteps[0].bodies], 
             [particle.y for particle in timesteps[0].bodies], 
             s=sizes,
@@ -64,11 +93,17 @@ def main():
             animated=True
         )
 
+        frames = np.arange(0, len(timesteps))
+
+        ax2.plot(frames, [timestep.total_energy for timestep in timesteps], "bo")
+
         def init():
-            return particles,
+            return particles, cursor
 
         def animate(t):
             timestep = timesteps[t]
+
+            cursor.set_xdata(t)
 
             xs = [particle.x for particle in timestep.bodies]
             ys = [particle.y for particle in timestep.bodies]
@@ -77,10 +112,12 @@ def main():
 
             particles.set_offsets(xys)
 
-            return particles,
+            return particles, cursor
 
-        ani = animation.FuncAnimation(fig, animate, init_func=init, frames=np.arange(0, len(timesteps)),
+        ani = animation.FuncAnimation(fig, animate, init_func=init, frames=frames,
                                     interval=interval * 1000, blit=True)
+
+        plt.tight_layout()
 
         if len(sys.argv) == 1 + 2:
             fps = round(1 / interval)
