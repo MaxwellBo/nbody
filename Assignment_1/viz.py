@@ -3,6 +3,7 @@ __author__ = "Maxwell Bo (43926871)"
 
 import sys
 import math
+import statistics
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
@@ -94,7 +95,10 @@ def main():
         frames = np.arange(0, len(timesteps))
         time = np.true_divide(frames, fps)
 
-        ax2.plot(time, [timestep.total_energy for timestep in timesteps], "bo", markersize=2)
+        energies = [timestep.total_energy for timestep in timesteps]
+        print("Coefficient of variation of energy is", statistics.stdev(energies) / statistics.mean(energies) * 100)
+
+        ax2.plot(time, energies, "bo", markersize=2)
 
         def init():
             return particles, cursor

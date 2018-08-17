@@ -62,7 +62,6 @@ double calculate_total_energy(const std::vector<Body>& bodies) {
             auto& y = bodies[j];
 
             acc += x.gravitational_potential_energy(y);
-            acc += y.gravitational_potential_energy(x);
         }
     }
     
@@ -234,20 +233,24 @@ int main(int argc, char **argv) {
     while (step < desired_simulation_steps) {
         QuadTree root;
 
-        if (ENABLE_BARNES_HUT && step % 2 == FROG) {
-            const double root_x = 0;
-            const double root_y = 0;
-            const double radius = maximum_deviation_from_root(bodies) + 1;
-            // the quad-tree uses half the width as an implementation detail
-            // called "radius". We're trying to make a QuadTree that encapsulates
-            // the most distant body
+        // only the Frog step (not the Leap step) needs updated forces
+        // hence all the (step % 2 == FROG) tests
+        const bool need_force_calc = !ENABLE_LEAPFROG || step % 2 == FROG;
 
-            root = QuadTree(root_x, root_y, radius);
+        if (need_force_calc) {
+            if (ENABLE_BARNES_HUT) {
+                const double root_x = 0;
+                const double root_y = 0;
+                const double radius = maximum_deviation_from_root(bodies) + 1;
+                // the quad-tree uses half the width as an implementation detail
+                // called "radius". We're trying to make a QuadTree that encapsulates
+                // the most distant body
 
-            assert(root.insert_all(bodies));
-        }
+                root = QuadTree(root_x, root_y, radius);
 
-        if (!ENABLE_LEAPFROG || step % 2 == FROG) {
+                assert(root.insert_all(bodies));
+            }
+
             for (auto& body: bodies) {
                 body.reset_force();
 
@@ -255,15 +258,15 @@ int main(int argc, char **argv) {
                     root.calculate_force(body);
                 }
             }
-        }
 
-        if (!ENABLE_BARNES_HUT) {
-            for (size_t i = 0; i < bodies.size() - 1; i++) {
-                auto& x = bodies[i];
+            if (!ENABLE_BARNES_HUT) {
+                for (size_t i = 0; i < bodies.size() - 1; i++) {
+                    auto& x = bodies[i];
 
-                for (size_t j = i + 1; j < bodies.size(); j++) {
-                    auto& y = bodies[j];
-                    x.exert_force_bidirectionally(y);
+                    for (size_t j = i + 1; j < bodies.size(); j++) {
+                        auto& y = bodies[j];
+                        x.exert_force_bidirectionally(y);
+                    }
                 }
             }
         }

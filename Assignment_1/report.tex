@@ -85,31 +85,25 @@ Thus, the final implementation:
 % Why do you believe it is correct - /3
 \subsection*{Correctness}
 
-I personally believe that the simulation is \textit{mostly} right. By visualising the results with \texttt{matplotlib}, we see something that resembles an $n$-body simulator\footnote{and that's good enough for me}. Distressingly, the total energy of the system is not constant throughout the system. When bodies are in close proxmity, anomalous energies that are inconsistent with the energy curve are observed. Furthermore, simulations with higher numbers of bodies produce random low energy outliers, but have a smoother total energy curve. There seems to be no signfiicant difference between Euler method and Leapfrog, with respect to energy anomalies.
+I personally believe that the simulation is relatively accurate. By visualising the results with \texttt{matplotlib}, we see something that resembles an $n$-body simulator. The total energy is flat, observing coefficients of variation as low as 0.001\%. Euler's method consistently demonstrated coefficients of variation three times higher than that of Leapfrog. Due to recommendations by literature, and observed data, the use of Euler's method was gradually phased out during my testing to speed up the process.
+
+Barnes-Hut caused a significant increase in observed coefficient of variation, averaging 0.08\% across multiple runs. Furthermore, total energy was observed to step up and down at varying intervals\ref{fig:anomaly}. I suspect that this was because certain force calculations were causing groups of bodies to be approximated as a single pseudobody, after other had strayed too far from the pseudobody's quadtree's node's centre of mass.
+
+When bodies are in close proxmity, anomalous total energies are observed\ref{fig:anomaly}. Furthermore, simulations with higher numbers of bodies produce more random low energy outliers (likely due to a greater number of close encounters). There seems to be no signficant difference between Euler method and Leapfrog, with respect to observation of anomalies.
 
 
 \begin{figure}[b]
 \caption{Observed energy anomaly while bodies in close proxmity - Leapfrog}
 \centering
-\includegraphics[width=0.5\textwidth]{energy_anomaly}
+\label{fig:anomaly}
+\includegraphics[width=\textwidth]{energy_anomaly}
 \end{figure} 
 
 \begin{figure}[b]
-\caption{Observed energy anomaly while bodies in close proxmity - Euler method}
+\caption{Barnes-Hut energy variation - Leapfrog}
 \centering
-\includegraphics[width=0.5\textwidth]{euler_energy_anomaly}
-\end{figure} 
-
-\begin{figure}[b]
-\caption{Observed energy anomaly while bodies in close proxmity - Euler method}
-\centering
-\includegraphics[width=0.5\textwidth]{euler_relaxed_energy_anomaly}
-\end{figure} 
-
-\begin{figure}[b]
-\caption{Observed energy anomaly - random outlier - Leapfrog}
-\centering
-\includegraphics[width=0.5\textwidth]{relaxed_energy_anomaly}
+\label{fig:barnes_hut}
+\includegraphics[width=\textwidth]{barnes_hut}
 \end{figure} 
 
 % Scaling or other performance discussion - /2

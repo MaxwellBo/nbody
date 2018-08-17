@@ -25,22 +25,36 @@ def main():
 
         data = json.loads(wellformed_json)
 
-        print(data)
-
         ##########
         # LAYOUT #
         ##########
-        fig = plt.figure(figsize=(6, 6))
-        plt.boxplot([(entry['numBodies'], entry['time']) for entry in data])
+        fig = plt.figure(figsize=(6, 8))
+        gs = gridspec.GridSpec(2, 1) 
+
+        ax1 = plt.subplot(gs[0])
+        ax1.set_title("60000 timestep running time")
+        ax1.set(xlabel="x (m)", ylabel="y (m)")
+
+        ax2 = plt.subplot(gs[1])
+        ax2.set_title("60000 timestep running time with Barnes-Hut enabled")
+        ax2.set(xlabel="t (s)", ylabel="E (J)")
+
+        plt.tight_layout()
+
+        xs = [(entry['numBodies']) for entry in data if not entry['barnesHut']]
+        ys = [(entry['time']) for entry in data if not entry['barnesHut']]
+        ax1.plot(xs, ys, "x")
+
+        xs = [(entry['numBodies']) for entry in data if entry['barnesHut']]
+        ys = [(entry['time']) for entry in data if entry['barnesHut']]
+        ax2.plot(xs, ys, "x")
 
         ############
         # PLOTTING #
         ############
 
         if len(sys.argv) == 1 + 2:
-
             out_filename = sys.argv[2]
-            # ani.save('out.gif', writer='imagemagick')
         else:
             plt.show()
 
