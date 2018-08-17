@@ -113,6 +113,7 @@ Henceforth, the use of the `recognizable' refers to eyeballing the output data, 
 
 The \textit{Barnes-Hut} algorithm appeared to be dominated by its constant factor.\ref{fig:performance} Generating input files with a high number of bodies that did not cause 'spontaneous combustion' (where bodies would fly away from each other in every direction), and unconstrained Quadtree growth (where bodies achieve escape velocity, rapidly expanding the size of the tree and causing a collapse in simulation accuracy) proved difficult. Further testing on \texttt{goliath} is needed to discover the $n$ that causes \textit{Barnes-Hut} to be more performant than the brute-force approach.
 
+Strangely, $n = 16$ with \textit{Barnes-Hut} enabled took longer than expected, when compared to $n \in \{ 4, 8, 12 \}$. Further investigation is required.
 \begin{figure}[b]
 \caption{Scaling characteristics}
 \centering

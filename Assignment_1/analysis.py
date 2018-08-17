@@ -33,11 +33,11 @@ def main():
 
         ax1 = plt.subplot(gs[0])
         ax1.set_title("60000 timestep running time")
-        ax1.set(ylabel="time elapsed (s)", xlabel="number of bodies (n)")
+        ax1.set(ylabel="time elapsed (s)", xlabel="bodies (n)")
 
         ax2 = plt.subplot(gs[1])
         ax2.set_title("60000 timestep running time with Barnes-Hut enabled")
-        ax2.set(ylabel="time elapsed (s)", xlabel="number of bodies (n)")
+        ax2.set(ylabel="time elapsed (s)", xlabel="bodies (n)")
 
         plt.tight_layout()
 
