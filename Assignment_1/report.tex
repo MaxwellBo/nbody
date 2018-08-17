@@ -48,9 +48,9 @@ At a high-level, the initial naive simulator:
 
 By using a Quadtree, (`a tree datastructure in which each internal node has exactly four children') and the \textit{Barnes-Hut} algorithm\cite{barnes86a}, the total cost of force calculation could be reduced to $O(n \log n)$, by grouping close-together bodies and approximating forces between the singular grouped pseudo-body, and distant bodies. New Quadtrees were constructed on each seperate simulation step.
 
-Dehen and Read note that the Euler method `performs very poorly in practice', further noting that `errors are proportional to $\Delta t^2$'. They contrast it with the second-order leapfrog symplectic integrator, which is `heavily used in collisionless N-body applications'.\cite{dehen11a}
+Dehen and Read note that the Euler method `performs very poorly in practice', further noting that `errors are proportional to $\Delta t^2$'. They contrast it with the second-order \textit{Leapfrog} symplectic integrator, which is `heavily used in collisionless N-body applications'.\cite{dehen11a}
 
-Leapfrog can be expressed many in forms\cite{Skeel1993} including a synchronised form:
+\textit{Leapfrog} can be expressed many in forms\cite{Skeel1993} including a synchronised form:
 
 \begin{align*}
 x_{i}&=x_{i-1}+v_{i-1/2}\,\Delta t\\
@@ -77,7 +77,7 @@ Thus, the final implementation:
     \item Constructed \texttt{Body} class instances, representing each point mass
     \item Packed the \texttt{Body}s into a \texttt{std::vector<Body>}, to maximize cache locality
     \item Inserted all \texttt{Body}s into a fresh \texttt{QuadTree} on full timesteps, traversing the \texttt{QuadTree} with every \texttt{Body} to calculate forces ($O(n \log n)$)
-    \item Performed the appropriate Leapfrog step to derive new velocities \textit{or} positions
+    \item Performed the appropriate \textit{Leapfrog} step to derive new velocities \textit{or} positions
     \item Output all necessary data
     \item \texttt{GOTO 4}
 \end{enumerate}
@@ -85,11 +85,11 @@ Thus, the final implementation:
 % Why do you believe it is correct - /3
 \subsection*{Correctness}
 
-I personally believe that the simulation is relatively accurate. By visualising the results with \texttt{matplotlib}, we see something that resembles an $n$-body simulator. The total energy is flat, observing coefficients of variation as low as 0.001\%. Euler's method consistently demonstrated coefficients of variation three times higher than that of Leapfrog. Due to recommendations by literature, and observed data, the use of Euler's method was gradually phased out during my testing to speed up the process.
+I personally believe that the simulation is relatively accurate. By visualising the results with \texttt{matplotlib}, we see something that resembles an $n$-body simulator. The total energy is flat, observing coefficients of variation as low as 0.001\%. Euler's method consistently demonstrated coefficients of variation three times higher than that of \textit{Leapfrog}. Due to recommendations by literature, and observed data, the use of Euler's method was gradually phased out during my testing to speed up the process.
 
-Barnes-Hut caused a significant increase in observed coefficient of variation, averaging 0.08\% across multiple runs. Furthermore, total energy was observed to step up and down at varying intervals\ref{fig:anomaly}. I suspect that this was because certain force calculations were causing groups of bodies to be approximated as a single pseudobody, after other had strayed too far from the pseudobody's quadtree's node's centre of mass.
+\textit{Barnes-Hut} caused a significant increase in observed coefficient of variation, averaging 0.08\% across multiple runs. Furthermore, total energy was observed to step up and down at varying intervals\ref{fig:anomaly}. I suspect that this was because certain force calculations were causing groups of bodies to be approximated as a single pseudobody, after other had strayed too far from the pseudobody's quadtree's node's centre of mass.
 
-When bodies are in close proxmity, anomalous total energies are observed\ref{fig:anomaly}. Furthermore, simulations with higher numbers of bodies produce more random low energy outliers (likely due to a greater number of close encounters). There seems to be no signficant difference between Euler method and Leapfrog, with respect to observation of anomalies.
+When bodies are in close proxmity, anomalous total energies are observed\ref{fig:anomaly}. Furthermore, simulations with higher numbers of bodies produce more random low energy outliers (likely due to a greater number of close encounters). There seems to be no signficant difference between Euler method and \textit{Leapfrog}, with respect to observation of anomalies.
 
 
 \begin{figure}[b]
@@ -110,6 +110,15 @@ When bodies are in close proxmity, anomalous total energies are observed\ref{fig
 \subsection*{Performance \& Scaling}
 
 Henceforth, the use of the `recognizable' refers to eyeballing the output data, and making no significant effort to investigate the data more rigorously.
+
+The \textit{Barnes-Hut} algorithm appeared to be dominated by its constant factor.\ref{fig:performance} Generating input files with a high number of bodies that did not cause 'spontaneous combustion' (where bodies would fly away from each other in every direction), and unconstrained Quadtree growth (where bodies achieve escape velocity, rapidly expanding the size of the tree and causing a collapse in simulation accuracy) proved difficult. Further testing on \texttt{goliath} is needed to discover the $n$ that causes \textit{Barnes-Hut} to be more performant than the brute-force approach.
+
+\begin{figure}[b]
+\caption{Scaling characteristics}
+\centering
+\label{fig:performance}
+\includegraphics[width=\textwidth]{performance}
+\end{figure} 
 
 The addition of the 
 \texttt{-march=native} compiler flag, which enables the use of all CPU specific instructions, provided no recognizable improvement in running time, but was left enabled in the instance that it improved performance on \texttt{goliath}.
