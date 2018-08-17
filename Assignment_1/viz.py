@@ -48,8 +48,10 @@ def main():
         contents = f.read()
 
         bodies_n, timestep_n, interval, delta_t = contents.split('\n')[0].split()
-        bodies_n, timestep_n, interval, delta_t = int(bodies_n), int(timestep_n), float(interval), float(delta_t)
+        bodies_n, timestep_n, interval, delta_t = int(bodies_n), int(timestep_n), int(interval), float(delta_t)
         print({"input": in_filename, "numBodies": bodies_n, "numTimeSteps": timestep_n, "outputInterval": interval, "deltaT": delta_t})
+
+        time_per_frame = interval * delta_t
 
         masses = [ float(i) for i in contents.split('\n')[1:bodies_n + 1] ]
         assert(len(masses) == bodies_n)
@@ -88,7 +90,7 @@ def main():
         )
 
         cursor = ax2.axvline(x = 0, animated=True)
-        fps = round(1 / interval)
+        fps = round(1 / time_per_frame)
         frames = np.arange(0, len(timesteps))
         time = np.true_divide(frames, fps)
 
@@ -111,8 +113,9 @@ def main():
 
             return particles, cursor
 
+        print("Constructing an animation with", time_per_frame, "seconds dedicated to each frame")
         ani = animation.FuncAnimation(fig, animate, init_func=init, frames=frames,
-                                    interval=interval * 1000, blit=True)
+                                    interval=time_per_frame * 1000, blit=True)
 
         if len(sys.argv) == 1 + 2:
 
@@ -129,6 +132,7 @@ def main():
             )
             # ani.save('out.gif', writer='imagemagick')
         else:
+            print("Animating at", fps, "FPS")
             plt.show()
 
 if __name__ == "__main__":

@@ -105,13 +105,13 @@ void dump_timestep(double timestamp, const std::vector<Body>& bodies) {
 
 void dump_meta_info(
     unsigned int num_time_steps,
-    double output_interval,
+    unsigned int output_interval,
     double delta_t,
     const std::vector<Body>& bodies
 ) {
     const unsigned int bodies_n = bodies.size();
 
-    fprintf(stdout, "%d %d %f %f\n", bodies_n, num_time_steps, output_interval, delta_t); 
+    fprintf(stdout, "%d %d %d %f\n", bodies_n, num_time_steps, output_interval, delta_t); 
 }
 
 /*
@@ -203,14 +203,13 @@ int main(int argc, char **argv) {
     }
 
     const unsigned int num_time_steps = std::stoi(argv[1]);
-    const double output_interval = std::stod(argv[2]);
-    const double delta_t = std::stod(argv[3]);
+    const unsigned int desired_simulation_steps = num_time_steps * (ENABLE_LEAPFROG ? 2 : 1);
 
-    const double timestep = delta_t / num_time_steps;
+    const unsigned int output_interval = std::stoi(argv[2]);
+    const unsigned int output_simulation_step_interval = output_interval * (ENABLE_LEAPFROG ? 2 : 1);
+
+    const double timestep = std::stod(argv[3]);
     const double halfstep = timestep / 2;
-
-    const unsigned int output_step_interval = 
-        output_interval * (ENABLE_LEAPFROG ? 2 : 1) / timestep;
 
     const std::string &input_filename = argv[4];
 
@@ -223,7 +222,7 @@ int main(int argc, char **argv) {
     // TODO: can we have a function that inlines and updates both of these?
     unsigned int step = 0;
 
-    dump_meta_info(num_time_steps, output_interval, delta_t, bodies);
+    dump_meta_info(num_time_steps, output_interval, timestep, bodies);
     dump_masses(bodies);
     dump_timestep(t, bodies);
 
@@ -232,7 +231,7 @@ int main(int argc, char **argv) {
 
     double start = cpu_time();
 
-    while (t < delta_t) {
+    while (step < desired_simulation_steps) {
         QuadTree root;
 
         if (ENABLE_BARNES_HUT && step % 2 == FROG) {
@@ -291,7 +290,7 @@ int main(int argc, char **argv) {
             step++;
         }
 
-        if (step % output_step_interval == 0) {
+        if (step % output_simulation_step_interval == 0) {
             dump_timestep(t, bodies);
         }
     }
