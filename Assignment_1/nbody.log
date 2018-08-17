@@ -27,3 +27,9 @@
 { 'numTimeSteps': 6000000, 'inputFile': 'inputs/in_8_body_counterclockwise', 'numBodies': 8, 'time': 6.042778, 'leapfrog': true, 'barnesHut': false, 'precomputedGm': true },
 { 'numTimeSteps': 6000000, 'inputFile': 'inputs/in_8_body_counterclockwise', 'numBodies': 8, 'time': 6.011945, 'leapfrog': true, 'barnesHut': false, 'precomputedGm': true },
 { 'numTimeSteps': 6000000, 'inputFile': 'inputs/in_8_body_counterclockwise', 'numBodies': 8, 'time': 6.104110, 'leapfrog': true, 'barnesHut': false, 'precomputedGm': true }
+,
+{ 'numTimeSteps': 6000000, 'inputFile': 'inputs/in_12_body_counterclockwise_relaxed', 'numBodies': 12, 'time': 94.060135, 'leapfrog': true, 'barnesHut': true, 'precomputedGm': true },
+{ 'numTimeSteps': 6000000, 'inputFile': 'inputs/in_12_body_counterclockwise_relaxed', 'numBodies': 12, 'time': 91.713726, 'leapfrog': true, 'barnesHut': true, 'precomputedGm': true },
+{ 'numTimeSteps': 6000000, 'inputFile': 'inputs/in_12_body_counterclockwise_relaxed', 'numBodies': 12, 'time': 92.447045, 'leapfrog': true, 'barnesHut': true, 'precomputedGm': true },
+{ 'numTimeSteps': 6000000, 'inputFile': 'inputs/in_16_body_counterclockwise_somewhat_less_relaxed', 'numBodies': 16, 'time': 286.536536, 'leapfrog': true, 'barnesHut': true, 'precomputedGm': true },
+{ 'numTimeSteps': 6000000, 'inputFile': 'inputs/in_16_body_counterclockwise_somewhat_less_relaxed', 'numBodies': 16, 'time': 285.544333, 'leapfrog': true, 'barnesHut': true, 'precomputedGm': true }

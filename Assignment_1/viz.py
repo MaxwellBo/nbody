@@ -125,7 +125,7 @@ def main():
 
             out_filename = sys.argv[2]
 
-            print("Exporting at", fps, "FPS")
+            print("Exporting to", out_filename, "at", fps, "FPS")
             ani.save(out_filename, writer=animation.FFMpegWriter(
                 fps=fps, 
                 metadata={
