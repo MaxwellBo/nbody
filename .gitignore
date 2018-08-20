@@ -32,3 +32,4 @@
 *.app
 
 .venv
+.DS_Store
