@@ -64,7 +64,7 @@ def main():
         # LAYOUT #
         ##########
         fig = plt.figure(figsize=(6, 8))
-        gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1]) 
+        gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1])
 
         ax1 = plt.subplot(gs[0])
         ax1.set_title(sys.argv[1])
@@ -80,11 +80,11 @@ def main():
         ############
         # PLOTTING #
         ############
-        sizes = [ (math.log(mass / 1e14) + 1) * 10 for mass in masses ]
+        sizes = [ math.sqrt((mass / 1e14) / math.pi) * 6 for mass in masses ]
         colors = np.random.rand(bodies_n)
         particles = ax1.scatter(
-            [particle.x for particle in timesteps[0].bodies], 
-            [particle.y for particle in timesteps[0].bodies], 
+            [particle.x for particle in timesteps[0].bodies],
+            [particle.y for particle in timesteps[0].bodies],
             s=sizes,
             c=colors,
             animated=True
