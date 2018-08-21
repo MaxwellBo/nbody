@@ -21,8 +21,8 @@ QuadTree::QuadTree(double x, double y, double radius):
     mx(0),
     my(0),
     m(1),
-    ne(std::shared_ptr<QuadTree>()),
-    nw(std::shared_ptr<QuadTree>()),
+    ne(std::shared_ptr<QuadTree>()), // TODO: Verify that this isn't calling
+    nw(std::shared_ptr<QuadTree>()), //       the empty constructor
     se(std::shared_ptr<QuadTree>()),
     sw(std::shared_ptr<QuadTree>()),
     occupant(nullptr)
