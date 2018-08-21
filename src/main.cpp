@@ -15,7 +15,7 @@
 const unsigned int LEAP = 0;
 const unsigned int FROG = 1;
 
-const bool ENABLE_BARNES_HUT = true;
+const bool ENABLE_BARNES_HUT = false;
 const bool ENABLE_LEAPFROG = true;
 const bool ENABLE_LOGGING = false;
 
@@ -130,7 +130,6 @@ std::vector<Body> parse_input_file(std::ifstream& input_fh) {
     std::vector<double> masses = {};
     std::string line;
 
-    unsigned int total_energy = 0;
     unsigned int bodies_n = 0;
 
     if (input_fh.is_open()) {
@@ -149,33 +148,20 @@ std::vector<Body> parse_input_file(std::ifstream& input_fh) {
 
             // a mass
             if (segs.size() == 1) {
-                double mass;
-
-                if (sscanf(line.c_str(), "%lf", &mass)) {
-                    masses.push_back(mass);
-                }
+                masses.push_back(std::stod(segs[0]));
             } 
             // a total energy description
             else if (segs.size() == 2) { 
-                double timestamp;
-                sscanf(line.c_str(), "%lf %u", &timestamp, &total_energy);
             }
             // a body
             else if (segs.size() == 4) {
-                double x;
-                double y;
-                double vx;
-                double vy; 
+                Body body = Body();
+                body.x = std::stod(segs[0]);
+                body.y = std::stod(segs[1]);
+                body.vx = std::stod(segs[2]);
+                body.vy = std::stod(segs[3]);
 
-                if (sscanf(line.c_str(), "%lf %lf %lf %lf", &x, &y, &vx, &vy)) {
-                    Body body = Body();
-                    body.x = x;
-                    body.y = y;
-                    body.vx = vx;
-                    body.vy = vy;
-
-                    bodies.push_back(body);
-                } 
+                bodies.push_back(body);
             }
         }
 
