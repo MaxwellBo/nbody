@@ -190,6 +190,12 @@ bool QuadTree::insert(Body& body) {
     // Cases 2 and 3 - newly subdivided external node and internal node
     assert(occupant == nullptr);
 
+    // These inserts should never fail. If they do, it's because
+    // - our root tree node has too small a radius, causing everything
+    //   downstream to be OOB
+    // - two bodies are directly ontop of each other, causing the tree to
+    //   infinitely subdivide
+    // - nasal demons
     if (displaced) {
         const bool displaced_insertion_success = 
                nw->insert(*displaced) 
