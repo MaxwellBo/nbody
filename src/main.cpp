@@ -203,8 +203,7 @@ int main(int argc, char **argv) {
 
     std::vector<Body> bodies = parse_input_file(input_fh);
 
-    double t = 0; // XXX: optimization - double source of truth, update both
-    // TODO: can we have a function that inlines and updates both of these?
+    double t = 0; 
     unsigned int step = 0;
 
     dump_meta_info(num_time_steps, output_interval, timestep, bodies);
