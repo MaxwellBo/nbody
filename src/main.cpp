@@ -15,7 +15,7 @@
 const unsigned int LEAP = 0;
 const unsigned int FROG = 1;
 
-const bool ENABLE_BARNES_HUT = false;
+const bool ENABLE_BARNES_HUT = true;
 const bool ENABLE_LEAPFROG = true;
 const bool ENABLE_LOGGING = false;
 

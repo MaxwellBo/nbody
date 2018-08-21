@@ -187,17 +187,17 @@ bool QuadTree::insert(Body& body) {
         subdivide();
     }
 
-    bool displaced_insertion_success = false;
-
     // Cases 2 and 3 - newly subdivided external node and internal node
     assert(occupant == nullptr);
 
     if (displaced) {
-        displaced_insertion_success = 
+        const bool displaced_insertion_success = 
                nw->insert(*displaced) 
             || ne->insert(*displaced)
             || sw->insert(*displaced)
             || se->insert(*displaced);
+
+        assert(displaced_insertion_success);
     }
 
     const bool new_insertion_success = 
@@ -206,7 +206,7 @@ bool QuadTree::insert(Body& body) {
         || sw->insert(body)
         || se->insert(body);
 
-    assert(displaced_insertion_success || new_insertion_success);
+    assert(new_insertion_success);
 
     return true;
 }
