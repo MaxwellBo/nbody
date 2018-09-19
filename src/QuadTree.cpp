@@ -45,7 +45,7 @@ void QuadTree::subdivide() {
     // this will be the radius of our children
     const double r = radius / 2;
 
-    // (x, y, radius), love me positional calling semantics
+    // (x, y, radius)
     ne = std::make_shared<QuadTree>(x + r, y + r, r);
     nw = std::make_shared<QuadTree>(x - r, y + r, r);
     se = std::make_shared<QuadTree>(x + r, y - r, r);
