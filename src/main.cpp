@@ -6,6 +6,7 @@
 #include <time.h>
 #include <algorithm>
 #include <limits>
+#include <omp.h>
 
 // #include "CImg.h"
 #include "Body.hpp"
@@ -29,6 +30,8 @@ double maximum_deviation_from_root(const std::vector<Body>& bodies) {
     double lowest_y = std::numeric_limits<double>::max();
     double highest_y = std::numeric_limits<double>::min();
 
+    // CANDIDATE
+    // #pragma omp parallel default(shared)
     for (const auto& body: bodies) {
         if (body.x < lowest_x) {
             lowest_x = body.x;
@@ -51,6 +54,7 @@ double maximum_deviation_from_root(const std::vector<Body>& bodies) {
 double calculate_total_energy(const std::vector<Body>& bodies) {
     double acc = 0;
 
+    // CANDIDATE
     for (auto& body : bodies) {
         acc += body.kinetic_energy();
     }
@@ -58,6 +62,8 @@ double calculate_total_energy(const std::vector<Body>& bodies) {
     for (size_t i = 0; i < bodies.size() - 1; i++) {
         auto& x = bodies[i];
 
+        // CANDIDATE
+        // #pragma omp for reduction(+:acc)
         for (size_t j = i + 1; j < bodies.size(); j++) {
             auto& y = bodies[j];
 
@@ -245,38 +251,36 @@ int main(int argc, char **argv) {
             }
 
             if (!ENABLE_BARNES_HUT) {
-                for (size_t i = 0; i < bodies.size() - 1; i++) {
-                    auto& x = bodies[i];
+                #pragma omp parallel
+                {
+                    #pragma omp for
+                    for (size_t i = 0; i < bodies.size() - 1; i++) {
+                        auto& x = bodies[i];
 
-                    for (size_t j = i + 1; j < bodies.size(); j++) {
-                        auto& y = bodies[j];
-                        x.exert_force_bidirectionally(y);
+                        for (size_t j = i + 1; j < bodies.size(); j++) {
+                            auto& y = bodies[j];
+
+                            #pragma omp critical
+                            {
+                                x.exert_force_bidirectionally(y);
+                            }
+                        }
                     }
                 }
             }
         }
 
-        if (ENABLE_LEAPFROG) {
-            for (auto& body: bodies) {
-                if (step % 2 == LEAP) {
-                    body.leap(timestep);
-                }
-                else {
-                    body.frog(timestep);
-                }
+        for (auto& body: bodies) {
+            if (step % 2 == LEAP) {
+                body.leap(timestep);
             }
-
-            t += halfstep;
-            step++;
-        } 
-        else {
-            for (auto& body: bodies) {
-                body.euler_integrate(timestep);
+            else {
+                body.frog(timestep);
             }
-
-            t += timestep;
-            step++;
         }
+
+        t += halfstep;
+        step++;
 
         if (step % output_simulation_step_interval == 0) {
             dump_timestep(t, bodies);
