@@ -15,9 +15,9 @@
 const unsigned int LEAP = 0;
 const unsigned int FROG = 1;
 
-const bool ENABLE_BARNES_HUT = false;
+const bool ENABLE_BARNES_HUT = true;
 const bool ENABLE_LEAPFROG = true;
-const bool ENABLE_LOGGING = false;
+const bool ENABLE_LOGGING = true;
 
 double cpu_time(void) {
     return (double)clock() / (double)CLOCKS_PER_SEC;
@@ -29,23 +29,34 @@ double maximum_deviation_from_root(const std::vector<Body>& bodies) {
     double lowest_y = std::numeric_limits<double>::max();
     double highest_y = std::numeric_limits<double>::min();
 
-    // CANDIDATE
-    #pragma omp parallel for
+    // #pragma omp parallel for
     for (size_t i = 0; i < bodies.size(); i++) {
         auto& body = bodies[i];
 
         if (body.x < lowest_x) {
+            // #pragma omp critical
+            // {
             lowest_x = body.x;
+            // }
         }
         else if (highest_x < body.x) {
+            // #pragma omp critical
+            // {
             highest_x = body.x;
+            // }
         }
 
         if (body.y < lowest_y) {
+            // #pragma omp critical
+            // {
             lowest_y = body.y;
+            // }
         }
         else if (highest_y < body.y) {
+            // #pragma omp critical
+            // {
             highest_y = body.y;
+            // }
         }
     }
 
@@ -55,21 +66,23 @@ double maximum_deviation_from_root(const std::vector<Body>& bodies) {
 double calculate_total_energy(const std::vector<Body>& bodies) {
     double acc = 0;
 
-    #pragma omp parallel for reduction(+:acc)
+    // #pragma omp parallel for reduction(+:acc)
     for (size_t i = 0; i < bodies.size(); i++) {
         auto& body = bodies[i];
         acc += body.kinetic_energy();
     }
 
+    // #pragma omp for
     for (size_t i = 0; i < bodies.size() - 1; i++) {
         auto& x = bodies[i];
 
-        // CANDIDATE
-        #pragma omp parallel for reduction(+:acc)
         for (size_t j = i + 1; j < bodies.size(); j++) {
             auto& y = bodies[j];
 
+            //#pragma omp critical
+            //{
             acc += x.gravitational_potential_energy(y);
+            // }
         }
     }
     
@@ -245,12 +258,11 @@ int main(int argc, char **argv) {
                 assert(root.insert_all(bodies));
             }
 
-            #pragma omp parallel for
+            #pragma omp parallel for shared(bodies)
             for (size_t i = 0; i < bodies.size(); i++) {
                 auto& body = bodies[i];
                 body.reset_force();
 
-                // TODO: parallization
                 if (ENABLE_BARNES_HUT) {
                     root.calculate_force(body);
                 }
@@ -259,6 +271,7 @@ int main(int argc, char **argv) {
             if (!ENABLE_BARNES_HUT) {
                 // parallizing this loop is going to cause immense
                 // lack contention - less so in the inner loop
+                #pragma omp parallel for shared(bodies) schedule(static)
                 for (size_t i = 0; i < bodies.size() - 1; i++) {
                     auto& x = bodies[i];
                     
@@ -271,7 +284,7 @@ int main(int argc, char **argv) {
             }
         }
 
-        #pragma omp parallel for
+        /* #pragma omp parallel for shared(bodies) */
         for (size_t i = 0; i < bodies.size(); i++) {
             auto& body = bodies[i];
 

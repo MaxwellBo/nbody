@@ -124,9 +124,12 @@ void Body::exert_force_bidirectionally(Body& there) {
 
     const double scale_factor = F / r;
 
+    #pragma omp critical
+    {
     Fx += delta_x * scale_factor;
     Fy += delta_y * scale_factor;
 
     there.Fx -= delta_x * scale_factor;
     there.Fy -= delta_y * scale_factor;
+    }
 }
