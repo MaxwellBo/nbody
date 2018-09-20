@@ -257,19 +257,17 @@ int main(int argc, char **argv) {
             }
 
             if (!ENABLE_BARNES_HUT) {
-                #pragma omp parallel
-                {
-                    #pragma omp for
-                    for (size_t i = 0; i < bodies.size() - 1; i++) {
-                        auto& x = bodies[i];
+                #pragma omp parallel for
+                for (size_t i = 0; i < bodies.size(); i++) {
+                    auto& x = bodies[i];
 
-                        for (size_t j = i + 1; j < bodies.size(); j++) {
-                            auto& y = bodies[j];
+                    for (size_t j = 0; j < bodies.size(); j++) {
+                        auto& y = bodies[j];
 
-                            #pragma omp critical
-                            {
-                                x.exert_force_bidirectionally(y);
-                            }
+                        if (x != y) {
+                            // XXX: Do NOT swap these around. You will cause
+                            // race conditions
+                            x.exert_force_unidirectionally(y)
                         }
                     }
                 }
