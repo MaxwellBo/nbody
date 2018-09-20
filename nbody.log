@@ -30,4 +30,13 @@
 { 'numTimeSteps': 5, 'inputFile': 'inputs/in_10000', 'numBodies': 10000, 'time': 9.050000, 'leapfrog': true, 'barnesHut': true, 'precomputedGm': true, 'ompMaxThreads': 24 },
 { 'numTimeSteps': 5, 'inputFile': 'inputs/in_10000', 'numBodies': 10000, 'time': 9.350000, 'leapfrog': true, 'barnesHut': true, 'precomputedGm': true, 'ompMaxThreads': 24 },
 { 'numTimeSteps': 5, 'inputFile': 'inputs/in_10000', 'numBodies': 10000, 'time': 9.640000, 'leapfrog': true, 'barnesHut': true, 'precomputedGm': true, 'ompMaxThreads': 24 },
-{ 'numTimeSteps': 5, 'inputFile': 'inputs/in_10000', 'numBodies': 10000, 'time': 8.860000, 'leapfrog': true, 'barnesHut': true, 'precomputedGm': true, 'ompMaxThreads': 8 }
+{ 'numTimeSteps': 5, 'inputFile': 'inputs/in_10000', 'numBodies': 10000, 'time': 8.860000, 'leapfrog': true, 'barnesHut': true, 'precomputedGm': true, 'ompMaxThreads': 8 },
+{ 'numTimeSteps': 5, 'inputFile': 'inputs/in_10000', 'numBodies': 10000, 'time': 23.420000, 'leapfrog': true, 'barnesHut': false, 'precomputedGm': true, 'ompMaxThreads': 1 },
+{ 'numTimeSteps': 5, 'inputFile': 'inputs/in_10000', 'numBodies': 10000, 'time': 24.340000, 'leapfrog': true, 'barnesHut': false, 'precomputedGm': true, 'ompMaxThreads': 8 },
+{ 'numTimeSteps': 5, 'inputFile': 'inputs/in_10000', 'numBodies': 10000, 'time': 24.980000, 'leapfrog': true, 'barnesHut': false, 'precomputedGm': true, 'ompMaxThreads': 24 },
+{ 'numTimeSteps': 5, 'inputFile': 'inputs/in_10000', 'numBodies': 10000, 'time': 23.030000, 'leapfrog': true, 'barnesHut': false, 'precomputedGm': true, 'ompMaxThreads': 24 },
+{ 'numTimeSteps': 5, 'inputFile': 'inputs/in_10000', 'numBodies': 10000, 'time': 24.770000, 'leapfrog': true, 'barnesHut': false, 'precomputedGm': true, 'ompMaxThreads': 24 },
+{ 'numTimeSteps': 5, 'inputFile': 'inputs/in_10000', 'numBodies': 10000, 'time': 24.950000, 'leapfrog': true, 'barnesHut': false, 'precomputedGm': true, 'ompMaxThreads': 24 },
+{ 'numTimeSteps': 5, 'inputFile': 'inputs/in_10000', 'numBodies': 10000, 'time': 25.810000, 'leapfrog': true, 'barnesHut': false, 'precomputedGm': true, 'ompMaxThreads': 24 },
+{ 'numTimeSteps': 5, 'inputFile': 'inputs/in_10000', 'numBodies': 10000, 'time': 25.880000, 'leapfrog': true, 'barnesHut': false, 'precomputedGm': true, 'ompMaxThreads': 24 },
+{ 'numTimeSteps': 5, 'inputFile': 'inputs/in_10000', 'numBodies': 10000, 'time': 25.590000, 'leapfrog': true, 'barnesHut': false, 'precomputedGm': true, 'ompMaxThreads': 24 }

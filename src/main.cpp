@@ -7,7 +7,7 @@
 #include <algorithm>
 #include <limits>
 #include <omp.h>
-#include <mpi.h>
+/* #include <mpi.h> */
 
 #include "Body.hpp"
 #include "QuadTree.hpp"
@@ -16,7 +16,7 @@
 const unsigned int LEAP = 0;
 const unsigned int FROG = 1;
 
-const bool ENABLE_BARNES_HUT = true;
+const bool ENABLE_BARNES_HUT = false;
 const bool ENABLE_LEAPFROG = true;
 const bool ENABLE_LOGGING = true;
 
@@ -224,6 +224,9 @@ int main(int argc, char **argv) {
 
     std::vector<Body> bodies = parse_input_file(input_fh);
 
+    double t = 0; 
+    unsigned int step = 0;
+
     dump_meta_info(num_time_steps, output_interval, timestep, bodies);
     dump_masses(bodies);
     dump_timestep(t, bodies);
@@ -232,14 +235,12 @@ int main(int argc, char **argv) {
     fprintf(stderr, "Leapfrog enabled: %s\n", ENABLE_LEAPFROG ? "true" : "false");
     fprintf(stderr, "OMP Max threads: %d\n", omp_get_max_threads());
 
-    double t = 0; 
-    unsigned int step = 0;
-
-    int rank, size;
-    int comm = MPI_COMM_WORLD;
-    MPI_Init(&argc, &argv);
-    MPI_Comm_rank(comm, &rank);
-    MPI_Comm_size(comm, &size);
+    /*  */
+    /* int rank, size; */
+    /* int comm = MPI_COMM_WORLD; */
+    /* MPI_Init(&argc, &argv); */
+    /* MPI_Comm_rank(comm, &rank); */
+    /* MPI_Comm_size(comm, &size); */
 
     double start = cpu_time();
 
@@ -275,24 +276,24 @@ int main(int argc, char **argv) {
             }
 
             if (!ENABLE_BARNES_HUT) {
-                #pragma omp parallel for
+                #pragma omp parallel for shared(bodies)
                 for (size_t i = 0; i < bodies.size(); i++) {
                     auto& x = bodies[i];
 
                     for (size_t j = 0; j < bodies.size(); j++) {
                         auto& y = bodies[j];
 
-                        if (x != y) {
+                        if (&bodies[i] != &bodies[j]) {
                             // XXX: Do NOT swap these around. You will cause
                             // race conditions
-                            x.exert_force_unidirectionally(y)
+                            x.exert_force_unidirectionally(y);
                         }
                     }
                 }
             }
         }
 
-        /* #pragma omp parallel for shared(bodies) */
+        #pragma omp parallel for shared(bodies)
         for (size_t i = 0; i < bodies.size(); i++) {
             auto& body = bodies[i];
 
@@ -312,7 +313,7 @@ int main(int argc, char **argv) {
         }
     }
 
-    MPI_Finalize();
+    /* MPI_Finalize(); */
 
     const double cpu_time_elapsed = cpu_time() - start;
     fprintf(stderr, "Total CPU time was %lf\n", cpu_time_elapsed);
