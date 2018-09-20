@@ -9,7 +9,6 @@
 #include <omp.h>
 #include <mpi.h>
 
-// #include "CImg.h"
 #include "Body.hpp"
 #include "QuadTree.hpp"
 #include "utils.hpp"
@@ -17,9 +16,9 @@
 const unsigned int LEAP = 0;
 const unsigned int FROG = 1;
 
-const bool ENABLE_BARNES_HUT = false;
+const bool ENABLE_BARNES_HUT = true;
 const bool ENABLE_LEAPFROG = true;
-const bool ENABLE_LOGGING = false;
+const bool ENABLE_LOGGING = true;
 
 double cpu_time(void) {
     return (double)clock() / (double)CLOCKS_PER_SEC;
@@ -31,21 +30,34 @@ double maximum_deviation_from_root(const std::vector<Body>& bodies) {
     double lowest_y = std::numeric_limits<double>::max();
     double highest_y = std::numeric_limits<double>::min();
 
-    // CANDIDATE
-    // #pragma omp parallel default(shared)
-    for (const auto& body: bodies) {
+    // #pragma omp parallel for
+    for (size_t i = 0; i < bodies.size(); i++) {
+        auto& body = bodies[i];
+
         if (body.x < lowest_x) {
+            // #pragma omp critical
+            // {
             lowest_x = body.x;
+            // }
         }
         else if (highest_x < body.x) {
+            // #pragma omp critical
+            // {
             highest_x = body.x;
+            // }
         }
 
         if (body.y < lowest_y) {
+            // #pragma omp critical
+            // {
             lowest_y = body.y;
+            // }
         }
         else if (highest_y < body.y) {
+            // #pragma omp critical
+            // {
             highest_y = body.y;
+            // }
         }
     }
 
@@ -55,20 +67,23 @@ double maximum_deviation_from_root(const std::vector<Body>& bodies) {
 double calculate_total_energy(const std::vector<Body>& bodies) {
     double acc = 0;
 
-    // CANDIDATE
-    for (auto& body : bodies) {
+    // #pragma omp parallel for reduction(+:acc)
+    for (size_t i = 0; i < bodies.size(); i++) {
+        auto& body = bodies[i];
         acc += body.kinetic_energy();
     }
 
+    // #pragma omp for
     for (size_t i = 0; i < bodies.size() - 1; i++) {
         auto& x = bodies[i];
 
-        // CANDIDATE
-        // #pragma omp for reduction(+:acc)
         for (size_t j = i + 1; j < bodies.size(); j++) {
             auto& y = bodies[j];
 
+            //#pragma omp critical
+            //{
             acc += x.gravitational_potential_energy(y);
+            // }
         }
     }
     
@@ -215,6 +230,7 @@ int main(int argc, char **argv) {
 
     fprintf(stderr, "Barnes-Hut enabled: %s\n", ENABLE_BARNES_HUT ? "true" : "false");
     fprintf(stderr, "Leapfrog enabled: %s\n", ENABLE_LEAPFROG ? "true" : "false");
+    fprintf(stderr, "OMP Max threads: %d\n", omp_get_max_threads());
 
     double t = 0; 
     unsigned int step = 0;
@@ -248,7 +264,9 @@ int main(int argc, char **argv) {
                 assert(root.insert_all(bodies));
             }
 
-            for (auto& body: bodies) {
+            #pragma omp parallel for shared(bodies)
+            for (size_t i = 0; i < bodies.size(); i++) {
+                auto& body = bodies[i];
                 body.reset_force();
 
                 if (ENABLE_BARNES_HUT) {
@@ -274,7 +292,10 @@ int main(int argc, char **argv) {
             }
         }
 
-        for (auto& body: bodies) {
+        /* #pragma omp parallel for shared(bodies) */
+        for (size_t i = 0; i < bodies.size(); i++) {
+            auto& body = bodies[i];
+
             if (step % 2 == LEAP) {
                 body.leap(timestep);
             }
@@ -301,13 +322,14 @@ int main(int argc, char **argv) {
 
         fprintf(
             log_fh,
-            ",\n{ 'numTimeSteps': %d, 'inputFile': '%s', 'numBodies': %d, 'time': %lf, 'leapfrog': %s, 'barnesHut': %s, 'precomputedGm': true }",
+            ",\n{ 'numTimeSteps': %d, 'inputFile': '%s', 'numBodies': %d, 'time': %lf, 'leapfrog': %s, 'barnesHut': %s, 'precomputedGm': true, 'ompMaxThreads': %d }",
             num_time_steps,
             input_filename.c_str(),
             static_cast<int>(bodies.size()), // thank-you Joel
             cpu_time_elapsed,
             ENABLE_LEAPFROG ? "true" : "false",
-            ENABLE_BARNES_HUT ? "true" : "false"
+            ENABLE_BARNES_HUT ? "true" : "false",
+            omp_get_max_threads()
         );
 
         fclose(log_fh);

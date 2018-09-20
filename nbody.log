@@ -26,4 +26,8 @@
 { 'numTimeSteps': 6000000, 'inputFile': 'inputs/in_4_body_counterclockwise', 'numBodies': 4, 'time': 0.953930, 'leapfrog': true, 'barnesHut': false, 'precomputedGm': true },
 { 'numTimeSteps': 6000000, 'inputFile': 'inputs/in_8_body_counterclockwise', 'numBodies': 8, 'time': 3.314875, 'leapfrog': true, 'barnesHut': false, 'precomputedGm': true },
 { 'numTimeSteps': 6000000, 'inputFile': 'inputs/in_16_body_counterclockwise_somewhat_less_relaxed', 'numBodies': 16, 'time': 13.413274, 'leapfrog': true, 'barnesHut': false, 'precomputedGm': true },
-{ 'numTimeSteps': 6000000, 'inputFile': 'inputs/in_12_body_counterclockwise_somewhat_less_relaxed', 'numBodies': 12, 'time': 7.528135, 'leapfrog': true, 'barnesHut': false, 'precomputedGm': true }
+{ 'numTimeSteps': 6000000, 'inputFile': 'inputs/in_12_body_counterclockwise_somewhat_less_relaxed', 'numBodies': 12, 'time': 7.528135, 'leapfrog': true, 'barnesHut': false, 'precomputedGm': true },
+{ 'numTimeSteps': 5, 'inputFile': 'inputs/in_10000', 'numBodies': 10000, 'time': 9.050000, 'leapfrog': true, 'barnesHut': true, 'precomputedGm': true, 'ompMaxThreads': 24 },
+{ 'numTimeSteps': 5, 'inputFile': 'inputs/in_10000', 'numBodies': 10000, 'time': 9.350000, 'leapfrog': true, 'barnesHut': true, 'precomputedGm': true, 'ompMaxThreads': 24 },
+{ 'numTimeSteps': 5, 'inputFile': 'inputs/in_10000', 'numBodies': 10000, 'time': 9.640000, 'leapfrog': true, 'barnesHut': true, 'precomputedGm': true, 'ompMaxThreads': 24 },
+{ 'numTimeSteps': 5, 'inputFile': 'inputs/in_10000', 'numBodies': 10000, 'time': 8.860000, 'leapfrog': true, 'barnesHut': true, 'precomputedGm': true, 'ompMaxThreads': 8 }
