@@ -128,6 +128,16 @@ void broadcast_bodies(std::vector<Body> bodies, int rank) {
     double vx[bodies_n];
     double vy[bodies_n];
 
+    if (rank == 0) {
+        for (size_t i = 0; i < bodies.size(); i++) {
+            auto& body = bodies[i];
+            x[i] = body.x;
+            y[i] = body.y;
+            vx[i] = body.vx;
+            vy[i] = body.vy;
+        }
+    }
+
     MPI_Bcast(x, bodies_n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     MPI_Bcast(y, bodies_n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     MPI_Bcast(vx, bodies_n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
@@ -139,9 +149,12 @@ void broadcast_bodies(std::vector<Body> bodies, int rank) {
         body.y = y[i];
         body.vx = vx[i];
         body.vy = vy[i];
+        
+        if (i == 0) {
+            printf("hello from %d %f\n", rank, x[i]);
+            printf("hello from %d %f\n", rank, y[i]);
+        }
     }
-
-    printf("hello from %d\n", rank);
 }
 
 /*
