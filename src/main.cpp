@@ -51,7 +51,8 @@ double maximum_deviation_from_root(const std::vector<Body>& bodies) {
     return std::max(highest_y - lowest_y, highest_x - lowest_x);
 }
 
-double calculate_total_energy(const std::vector<Body>& bodies) {
+
+double calculate_kinetic_energy(const std::vector<Body>& bodies) {
     double acc = 0;
 
     #pragma omp parallel for reduction(+:acc)
@@ -60,7 +61,13 @@ double calculate_total_energy(const std::vector<Body>& bodies) {
         acc += body.kinetic_energy();
     }
 
-    // This does not parallelize nicely
+    return acc;
+}
+
+double calculate_gravitational_potential_energy(const std::vector<Body>& bodies) {
+    double acc = 0;
+
+    #pragma omp parallel for reduction(+:acc)
     for (size_t i = 0; i < bodies.size() - 1; i++) {
         auto& x = bodies[i];
 
@@ -72,6 +79,11 @@ double calculate_total_energy(const std::vector<Body>& bodies) {
     }
     
     return acc;
+}
+
+double calculate_total_energy(const std::vector<Body>& bodies) {
+    return calculate_gravitational_potential_energy(bodies) 
+        + calculate_kinetic_energy(bodies);
 }
 
 void dump_masses(const std::vector<Body>& bodies) {
@@ -122,13 +134,16 @@ void dump_meta_info(
 
 void broadcast_bodies(std::vector<Body> bodies, int rank) {
     size_t bodies_n = bodies.size();
+    int broadcast_root = 0;
     
     double x[bodies_n];
     double y[bodies_n];
     double vx[bodies_n];
     double vy[bodies_n];
 
-    if (rank == 0) {
+    // This essentially round-trips the data for rank == 0 (which is good)
+    // meaning it gets copied to all other nodes
+    if (rank == broadcast_root) {
         for (size_t i = 0; i < bodies.size(); i++) {
             auto& body = bodies[i];
             x[i] = body.x;
@@ -138,21 +153,18 @@ void broadcast_bodies(std::vector<Body> bodies, int rank) {
         }
     }
 
-    MPI_Bcast(x, bodies_n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    MPI_Bcast(y, bodies_n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    MPI_Bcast(vx, bodies_n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    MPI_Bcast(vy, bodies_n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    MPI_Bcast(x, bodies_n, MPI_DOUBLE, broadcast_root, MPI_COMM_WORLD);
+    MPI_Bcast(y, bodies_n, MPI_DOUBLE, broadcast_root, MPI_COMM_WORLD);
+    MPI_Bcast(vx, bodies_n, MPI_DOUBLE, broadcast_root, MPI_COMM_WORLD);
+    MPI_Bcast(vy, bodies_n, MPI_DOUBLE, broadcast_root, MPI_COMM_WORLD);
 
-    for (size_t i = 0; i < bodies.size(); i++) {
-        auto& body = bodies[i];
-        body.x = x[i];
-        body.y = y[i];
-        body.vx = vx[i];
-        body.vy = vy[i];
-        
-        if (i == 0) {
-            printf("hello from %d %f\n", rank, x[i]);
-            printf("hello from %d %f\n", rank, y[i]);
+    if (rank != broadcast_root) {
+        for (size_t i = 0; i < bodies.size(); i++) {
+            auto& body = bodies[i];
+            body.x = x[i];
+            body.y = y[i];
+            body.vx = vx[i];
+            body.vy = vy[i];
         }
     }
 }
@@ -253,10 +265,12 @@ int main(int argc, char **argv) {
 
     std::vector<Body> bodies = parse_input_file(input_fh);
 
-    double t = 0; 
-    unsigned int step = 0;
+    double start = cpu_time();
 
     if (rank == 0) {
+        double t = 0; 
+        unsigned int step = 0;
+
         dump_meta_info(num_time_steps, output_interval, timestep, bodies);
         dump_masses(bodies);
         dump_timestep(t, bodies);
@@ -264,78 +278,121 @@ int main(int argc, char **argv) {
         fprintf(stderr, "Barnes-Hut enabled: %s\n", ENABLE_BARNES_HUT ? "true" : "false");
         fprintf(stderr, "Leapfrog enabled: %s\n", ENABLE_LEAPFROG ? "true" : "false");
         fprintf(stderr, "OMP Max threads: %d\n", omp_get_max_threads());
-    }
 
-    broadcast_bodies(bodies, rank);
+        while (step < desired_simulation_steps) {
+            QuadTree root;
 
-    double start = cpu_time();
-    while (step < desired_simulation_steps) {
-        QuadTree root;
+            // only the Frog step (not the Leap step) needs updated forces
+            // hence all the (step % 2 == FROG) tests
+            const bool need_force_calc = step % 2 == FROG;
 
-        // only the Frog step (not the Leap step) needs updated forces
-        // hence all the (step % 2 == FROG) tests
-        const bool need_force_calc = !ENABLE_LEAPFROG || step % 2 == FROG;
-
-        if (need_force_calc) {
-            if (ENABLE_BARNES_HUT) {
-                const double root_x = 0;
-                const double root_y = 0;
-                const double radius = maximum_deviation_from_root(bodies) + 1;
-                // the quad-tree uses half the width as an implementation detail
-                // called "radius". We're trying to make a QuadTree that encapsulates
-                // the most distant body
-
-                root = QuadTree(root_x, root_y, radius);
-
-                assert(root.insert_all(bodies));
-            }
-
-            #pragma omp parallel for shared(bodies)
-            for (size_t i = 0; i < bodies.size(); i++) {
-                auto& body = bodies[i];
-                body.reset_force();
-
+            if (need_force_calc) {
                 if (ENABLE_BARNES_HUT) {
-                    root.calculate_force(body);
-                }
-            }
+                    const double root_x = 0;
+                    const double root_y = 0;
+                    const double radius = maximum_deviation_from_root(bodies) + 1;
+                    // the quad-tree uses half the width as an implementation detail
+                    // called "radius". We're trying to make a QuadTree that encapsulates
+                    // the most distant body
 
-            if (!ENABLE_BARNES_HUT) {
+                    root = QuadTree(root_x, root_y, radius);
+
+                    assert(root.insert_all(bodies));
+                }
+
                 #pragma omp parallel for shared(bodies)
                 for (size_t i = 0; i < bodies.size(); i++) {
-                    auto& x = bodies[i];
+                    auto& body = bodies[i];
+                    body.reset_force();
 
-                    for (size_t j = 0; j < bodies.size(); j++) {
-                        auto& y = bodies[j];
+                    if (ENABLE_BARNES_HUT) {
+                        root.calculate_force(body);
+                    }
+                }
 
-                        if (&bodies[i] != &bodies[j]) {
-                            // XXX: Do NOT swap these around. You will cause
-                            // race conditions
-                            x.exert_force_unidirectionally(y);
+                if (!ENABLE_BARNES_HUT) {
+                    #pragma omp parallel for shared(bodies)
+                    for (size_t i = 0; i < bodies.size(); i++) {
+                        auto& x = bodies[i];
+
+                        // Are we doing twice the work here by not doing all
+                        // pairwise combinations and exerting force
+                        // bidirectionally?
+                        // Yes!
+                        // Does doing it this way eliminate locking?
+                        // Also yes!
+                        // And does it provide a massive parallel speedup?
+                        // Damn straight it does
+                        for (size_t j = 0; j < bodies.size(); j++) {
+                            auto& y = bodies[j];
+
+                            if (&bodies[i] != &bodies[j]) {
+                                // XXX: Do NOT swap these around. You will cause
+                                // race conditions
+                                x.exert_force_unidirectionally(y);
+                            }
                         }
                     }
                 }
             }
-        }
 
-        #pragma omp parallel for shared(bodies)
-        for (size_t i = 0; i < bodies.size(); i++) {
-            auto& body = bodies[i];
 
-            if (step % 2 == LEAP) {
-                body.leap(timestep);
+            int send_count = (bodies.size() / size) + 1;
+
+            MPI_Scatter(
+                        void* send_data,
+                            int send_count,
+                                MPI_Datatype send_datatype,
+                                    void* recv_data,
+                                        int recv_count,
+                                            MPI_Datatype recv_datatype,
+                                                int root,
+                                                    MPI_Comm communicator)
+            if (world_rank == 0) {
+              rand_nums = create_rand_nums(elements_per_proc * world_size);
             }
-            else {
-                body.frog(timestep);
+
+            // Create a buffer that will hold a subset of the random numbers
+            float *sub_rand_nums = malloc(sizeof(float) * elements_per_proc);
+
+            // Scatter the random numbers to all processes
+            MPI_Scatter(rand_nums, elements_per_proc, MPI_FLOAT, sub_rand_nums,
+                        elements_per_proc, MPI_FLOAT, 0, MPI_COMM_WORLD);
+
+            // Compute the average of your subset
+            float sub_avg = compute_avg(sub_rand_nums, elements_per_proc);
+            // Gather all partial averages down to the root process
+            float *sub_avgs = NULL;
+            if (world_rank == 0) {
+              sub_avgs = malloc(sizeof(float) * world_size);
             }
-        }
+            MPI_Gather(&sub_avg, 1, MPI_FLOAT, sub_avgs, 1, MPI_FLOAT, 0,
+                       MPI_COMM_WORLD);
 
-        t += halfstep;
-        step++;
+            // Compute the total average of all numbers.
+            if (world_rank == 0) {
+              float avg = compute_avg(sub_avgs, world_size);
+            } 
 
-        if (step % output_simulation_step_interval == 0) {
-            if (rank == 0) {
-                dump_timestep(t, bodies);
+            #pragma omp parallel for shared(bodies)
+            for (size_t i = 0; i < bodies.size(); i++) {
+                auto& body = bodies[i];
+
+                if (step % 2 == LEAP) {
+                    body.leap(timestep);
+                }
+                else {
+                    body.frog(timestep);
+                }
+            }
+
+            t += halfstep;
+            step++;
+
+            if (step % output_simulation_step_interval == 0) {
+                if (rank == 0) {
+                    dump_timestep(t, bodies);
+                }
             }
         }
     }
@@ -344,9 +401,7 @@ int main(int argc, char **argv) {
 
     const double cpu_time_elapsed = cpu_time() - start;
 
-    if (rank == 0) {
-        fprintf(stderr, "Total CPU time was %lf\n", cpu_time_elapsed);
-    }
+    fprintf(stderr, "Total CPU time on rank %d was %lf\n", rank, cpu_time_elapsed);
 
     if (ENABLE_LOGGING && rank == 0) {
         FILE *log_fh = fopen("nbody.log", "a");
