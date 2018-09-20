@@ -119,6 +119,31 @@ void dump_meta_info(
     fprintf(stdout, "%d %d %d %f\n", bodies_n, num_time_steps, output_interval, delta_t); 
 }
 
+
+void broadcast_bodies(std::vector<Body> bodies, int rank) {
+    size_t bodies_n = bodies.size();
+    
+    double x[bodies_n];
+    double y[bodies_n];
+    double vx[bodies_n];
+    double vy[bodies_n];
+
+    MPI_Bcast(x, bodies_n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    MPI_Bcast(y, bodies_n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    MPI_Bcast(vx, bodies_n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    MPI_Bcast(vy, bodies_n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+    for (size_t i = 0; i < bodies.size(); i++) {
+        auto& body = bodies[i];
+        body.x = x[i];
+        body.y = y[i];
+        body.vx = vx[i];
+        body.vy = vy[i];
+    }
+
+    printf("hello from %d\n", rank);
+}
+
 /*
 numBodies
 Mass1
@@ -193,6 +218,13 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
+    int size;
+    int rank;
+    MPI_Comm comm = MPI_COMM_WORLD;
+    MPI_Init(&argc, &argv);
+    MPI_Comm_size(comm, &size); // Get the number of processes
+    MPI_Comm_rank(comm, &rank); // Get the rank of the process
+
     const unsigned int num_time_steps = std::stoi(argv[1]);
     const unsigned int desired_simulation_steps = num_time_steps * (ENABLE_LEAPFROG ? 2 : 1);
 
@@ -211,22 +243,19 @@ int main(int argc, char **argv) {
     double t = 0; 
     unsigned int step = 0;
 
-    dump_meta_info(num_time_steps, output_interval, timestep, bodies);
-    dump_masses(bodies);
-    dump_timestep(t, bodies);
+    if (rank == 0) {
+        dump_meta_info(num_time_steps, output_interval, timestep, bodies);
+        dump_masses(bodies);
+        dump_timestep(t, bodies);
 
-    fprintf(stderr, "Barnes-Hut enabled: %s\n", ENABLE_BARNES_HUT ? "true" : "false");
-    fprintf(stderr, "Leapfrog enabled: %s\n", ENABLE_LEAPFROG ? "true" : "false");
-    fprintf(stderr, "OMP Max threads: %d\n", omp_get_max_threads());
+        fprintf(stderr, "Barnes-Hut enabled: %s\n", ENABLE_BARNES_HUT ? "true" : "false");
+        fprintf(stderr, "Leapfrog enabled: %s\n", ENABLE_LEAPFROG ? "true" : "false");
+        fprintf(stderr, "OMP Max threads: %d\n", omp_get_max_threads());
+    }
 
-    int rank, size;
-    MPI_Comm comm = MPI_COMM_WORLD;
-    MPI_Init(&argc, &argv);
-    MPI_Comm_rank(comm, &rank);
-    MPI_Comm_size(comm, &size);
+    broadcast_bodies(bodies, rank);
 
     double start = cpu_time();
-
     while (step < desired_simulation_steps) {
         QuadTree root;
 
@@ -292,16 +321,21 @@ int main(int argc, char **argv) {
         step++;
 
         if (step % output_simulation_step_interval == 0) {
-            dump_timestep(t, bodies);
+            if (rank == 0) {
+                dump_timestep(t, bodies);
+            }
         }
     }
 
     MPI_Finalize();
 
     const double cpu_time_elapsed = cpu_time() - start;
-    fprintf(stderr, "Total CPU time was %lf\n", cpu_time_elapsed);
 
-    if (ENABLE_LOGGING) {
+    if (rank == 0) {
+        fprintf(stderr, "Total CPU time was %lf\n", cpu_time_elapsed);
+    }
+
+    if (ENABLE_LOGGING && rank == 0) {
         FILE *log_fh = fopen("nbody.log", "a");
 
         fprintf(

@@ -1,7 +1,7 @@
 C_FILES := $(wildcard src/*.cpp)
 H_FILES := $(wildcard src/*.h)
 O_FILES := $(notdir $(C_FILES:%.cpp=%.o))
-CC := mpicxx -g -lstdc++ -Wall -pedantic -Wextra -std=c++11 -lm -O3 -march=native -fopenmp
+CC := mpicxx -g -lstdc++ -Wall -pedantic -Wextra -std=c++11 -lm -fopenmp
 EXE := nbody
 
 all: $(O_FILES)
