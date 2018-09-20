@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <limits>
 #include <omp.h>
+#include <mpi.h>
 
 // #include "CImg.h"
 #include "Body.hpp"
@@ -205,12 +206,8 @@ int main(int argc, char **argv) {
     const std::string &input_filename = argv[4];
 
     std::ifstream input_fh(input_filename);
-    FILE *log_fh = fopen("nbody.log", "a");
 
     std::vector<Body> bodies = parse_input_file(input_fh);
-
-    double t = 0; 
-    unsigned int step = 0;
 
     dump_meta_info(num_time_steps, output_interval, timestep, bodies);
     dump_masses(bodies);
@@ -218,6 +215,15 @@ int main(int argc, char **argv) {
 
     fprintf(stderr, "Barnes-Hut enabled: %s\n", ENABLE_BARNES_HUT ? "true" : "false");
     fprintf(stderr, "Leapfrog enabled: %s\n", ENABLE_LEAPFROG ? "true" : "false");
+
+    double t = 0; 
+    unsigned int step = 0;
+
+    int rank, size;
+    int comm = MPI_COMM_WORLD;
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(comm, &rank);
+    MPI_Comm_size(comm, &size);
 
     double start = cpu_time();
 
@@ -287,9 +293,14 @@ int main(int argc, char **argv) {
         }
     }
 
+    MPI_Finalize();
+
     const double cpu_time_elapsed = cpu_time() - start;
+    fprintf(stderr, "Total CPU time was %lf\n", cpu_time_elapsed);
 
     if (ENABLE_LOGGING) {
+        FILE *log_fh = fopen("nbody.log", "a");
+
         fprintf(
             log_fh,
             ",\n{ 'numTimeSteps': %d, 'inputFile': '%s', 'numBodies': %d, 'time': %lf, 'leapfrog': %s, 'barnesHut': %s, 'precomputedGm': true }",
@@ -300,10 +311,9 @@ int main(int argc, char **argv) {
             ENABLE_LEAPFROG ? "true" : "false",
             ENABLE_BARNES_HUT ? "true" : "false"
         );
-    }
 
-    fprintf(stderr, "Total CPU time was %lf\n", cpu_time_elapsed);
-    fclose(log_fh);
+        fclose(log_fh);
+    }
     
     return 0;
 }
