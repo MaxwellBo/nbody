@@ -7,7 +7,7 @@
 #include <algorithm>
 #include <limits>
 #include <omp.h>
-/* #include <mpi.h> */
+#include <mpi.h>
 
 #include "Body.hpp"
 #include "QuadTree.hpp"
@@ -30,34 +30,21 @@ double maximum_deviation_from_root(const std::vector<Body>& bodies) {
     double lowest_y = std::numeric_limits<double>::max();
     double highest_y = std::numeric_limits<double>::min();
 
-    // #pragma omp parallel for
     for (size_t i = 0; i < bodies.size(); i++) {
         auto& body = bodies[i];
 
         if (body.x < lowest_x) {
-            // #pragma omp critical
-            // {
             lowest_x = body.x;
-            // }
         }
         else if (highest_x < body.x) {
-            // #pragma omp critical
-            // {
             highest_x = body.x;
-            // }
         }
 
         if (body.y < lowest_y) {
-            // #pragma omp critical
-            // {
             lowest_y = body.y;
-            // }
         }
         else if (highest_y < body.y) {
-            // #pragma omp critical
-            // {
             highest_y = body.y;
-            // }
         }
     }
 
@@ -67,23 +54,20 @@ double maximum_deviation_from_root(const std::vector<Body>& bodies) {
 double calculate_total_energy(const std::vector<Body>& bodies) {
     double acc = 0;
 
-    // #pragma omp parallel for reduction(+:acc)
+    #pragma omp parallel for reduction(+:acc)
     for (size_t i = 0; i < bodies.size(); i++) {
         auto& body = bodies[i];
         acc += body.kinetic_energy();
     }
 
-    // #pragma omp for
+    // This does not parallelize nicely
     for (size_t i = 0; i < bodies.size() - 1; i++) {
         auto& x = bodies[i];
 
         for (size_t j = i + 1; j < bodies.size(); j++) {
             auto& y = bodies[j];
 
-            //#pragma omp critical
-            //{
             acc += x.gravitational_potential_energy(y);
-            // }
         }
     }
     
@@ -235,12 +219,11 @@ int main(int argc, char **argv) {
     fprintf(stderr, "Leapfrog enabled: %s\n", ENABLE_LEAPFROG ? "true" : "false");
     fprintf(stderr, "OMP Max threads: %d\n", omp_get_max_threads());
 
-    /*  */
-    /* int rank, size; */
-    /* int comm = MPI_COMM_WORLD; */
-    /* MPI_Init(&argc, &argv); */
-    /* MPI_Comm_rank(comm, &rank); */
-    /* MPI_Comm_size(comm, &size); */
+    int rank, size;
+    MPI_Comm comm = MPI_COMM_WORLD;
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(comm, &rank);
+    MPI_Comm_size(comm, &size);
 
     double start = cpu_time();
 
@@ -313,7 +296,7 @@ int main(int argc, char **argv) {
         }
     }
 
-    /* MPI_Finalize(); */
+    MPI_Finalize();
 
     const double cpu_time_elapsed = cpu_time() - start;
     fprintf(stderr, "Total CPU time was %lf\n", cpu_time_elapsed);
