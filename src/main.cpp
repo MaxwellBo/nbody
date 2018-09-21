@@ -402,7 +402,6 @@ int main(int argc, char **argv) {
 
     std::vector<Body> bodies = parse_input_file(input_fh);
 
-    double start = cpu_time();
     double t = 0; 
     unsigned int step = 0;
 
@@ -416,65 +415,63 @@ int main(int argc, char **argv) {
         fprintf(stderr, "OMP Max threads: %d\n", omp_get_max_threads());
     }
 
+    double start = cpu_time();
     while (step < desired_simulation_steps) {
-        if (rank == root) {
-            QuadTree qroot;
+        QuadTree qroot;
 
-            // only the Frog step (not the Leap step) needs updated forces
-            // hence all the (step % 2 == FROG) tests
-            const bool need_force_calc = step % 2 == FROG;
+        // only the Frog step (not the Leap step) needs updated forces
+        // hence all the (step % 2 == FROG) tests
+        const bool need_force_calc = (rank == root) || step % 2 == FROG;
 
-            if (need_force_calc) {
+        if (need_force_calc) {
+            if (ENABLE_BARNES_HUT) {
+                const double root_x = 0;
+                const double root_y = 0;
+                const double radius = maximum_deviation_from_root(bodies) + 1;
+                // the quad-tree uses half the width as an implementation detail
+                // called "radius". We're trying to make a QuadTree that encapsulates
+                // the most distant body
+
+                qroot = QuadTree(root_x, root_y, radius);
+
+                assert(qroot.insert_all(bodies));
+            }
+
+            #pragma omp parallel for shared(bodies)
+            for (size_t i = 0; i < bodies.size(); i++) {
+                auto& body = bodies[i];
+                body.reset_force();
+
                 if (ENABLE_BARNES_HUT) {
-                    const double root_x = 0;
-                    const double root_y = 0;
-                    const double radius = maximum_deviation_from_root(bodies) + 1;
-                    // the quad-tree uses half the width as an implementation detail
-                    // called "radius". We're trying to make a QuadTree that encapsulates
-                    // the most distant body
-
-                    qroot = QuadTree(root_x, root_y, radius);
-
-                    assert(qroot.insert_all(bodies));
+                    qroot.calculate_force(body);
                 }
+            }
 
+            if (!ENABLE_BARNES_HUT) {
                 #pragma omp parallel for shared(bodies)
                 for (size_t i = 0; i < bodies.size(); i++) {
-                    auto& body = bodies[i];
-                    body.reset_force();
+                    auto& x = bodies[i];
 
-                    if (ENABLE_BARNES_HUT) {
-                        qroot.calculate_force(body);
-                    }
-                }
+                    // Are we doing twice the work here by not doing all
+                    // pairwise combinations and exerting force
+                    // bidirectionally?
+                    // Yes!
+                    // Does doing it this way eliminate locking?
+                    // Also yes!
+                    // And does it provide a massive parallel speedup?
+                    // Damn straight it does
+                    for (size_t j = 0; j < bodies.size(); j++) {
+                        auto& y = bodies[j];
 
-                if (!ENABLE_BARNES_HUT) {
-                    #pragma omp parallel for shared(bodies)
-                    for (size_t i = 0; i < bodies.size(); i++) {
-                        auto& x = bodies[i];
-
-                        // Are we doing twice the work here by not doing all
-                        // pairwise combinations and exerting force
-                        // bidirectionally?
-                        // Yes!
-                        // Does doing it this way eliminate locking?
-                        // Also yes!
-                        // And does it provide a massive parallel speedup?
-                        // Damn straight it does
-                        for (size_t j = 0; j < bodies.size(); j++) {
-                            auto& y = bodies[j];
-
-                            if (&bodies[i] != &bodies[j]) {
-                                // XXX: Do NOT swap these around. You will cause
-                                // race conditions
-                                x.exert_force_unidirectionally(y);
-                            }
+                        if (&bodies[i] != &bodies[j]) {
+                            // XXX: Do NOT swap these around. You will cause
+                            // race conditions
+                            x.exert_force_unidirectionally(y);
                         }
                     }
                 }
             }
         }
-
         // std::vector<Body> sbodies = scatter_bodies(bodies, size, rank);
         // std::vector<Body bodies = sbodies;
 
