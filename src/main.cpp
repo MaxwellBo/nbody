@@ -133,43 +133,6 @@ void dump_meta_info(
     fprintf(stdout, "%d %d %d %f\n", bodies_n, num_time_steps, output_interval, delta_t); 
 }
 
-
-void broadcast_bodies(std::vector<Body> bodies, int size, int rank) {
-    size_t bodies_n = bodies.size();
-    
-    double x[bodies_n];
-    double y[bodies_n];
-    double vx[bodies_n];
-    double vy[bodies_n];
-
-    // This essentially round-trips the data for rank == 0 (which is good)
-    // meaning it gets copied to all other nodes
-    if (rank == root) {
-        for (size_t i = 0; i < bodies.size(); i++) {
-            auto& body = bodies[i];
-            x[i] = body.x;
-            y[i] = body.y;
-            vx[i] = body.vx;
-            vy[i] = body.vy;
-        }
-    }
-
-    MPI_Bcast(x, bodies_n, MPI_DOUBLE, root, MPI_COMM_WORLD);
-    MPI_Bcast(y, bodies_n, MPI_DOUBLE, root, MPI_COMM_WORLD);
-    MPI_Bcast(vx, bodies_n, MPI_DOUBLE, root, MPI_COMM_WORLD);
-    MPI_Bcast(vy, bodies_n, MPI_DOUBLE, root, MPI_COMM_WORLD);
-
-    if (rank != root) {
-        for (size_t i = 0; i < bodies.size(); i++) {
-            auto& body = bodies[i];
-            body.x = x[i];
-            body.y = y[i];
-            body.vx = vx[i];
-            body.vy = vy[i];
-        }
-    }
-}
-
 std::vector<Body> scatter_bodies(std::vector<Body> bodies, int size, int rank) {
     unsigned int bodies_n = bodies.size();
 
@@ -512,11 +475,12 @@ int main(int argc, char **argv) {
             }
         }
 
-        std::vector<Body> sbodies = scatter_bodies(bodies, size, rank);
+        // std::vector<Body> sbodies = scatter_bodies(bodies, size, rank);
+        // std::vector<Body bodies = sbodies;
 
         #pragma omp parallel for shared(bodies)
-        for (size_t i = 0; i < sbodies.size(); i++) {
-            auto& body = sbodies[i];
+        for (size_t i = 0; i < bodies.size(); i++) {
+            auto& body = bodies[i];
 
             if (step % 2 == LEAP) {
                 body.leap(timestep);
@@ -526,7 +490,7 @@ int main(int argc, char **argv) {
             }
         }
 
-        bodies = gather_bodies(sbodies, size, rank, bodies.size());
+        /* bodies = gather_bodies(sbodies, size, rank, bodies.size()); */
 
         t += halfstep;
         step++;
