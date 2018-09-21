@@ -36,11 +36,13 @@ void Body::euler_integrate(double dt) {
     y += dy;
 }
 
+// pos and velocity
 void Body::leap(double dt) {
     x = x + (vx * dt);
     y = y + (vy * dt);
 }
 
+// velocity, mass, and force
 void Body::frog(double dt) {
     const double ax = Fx / m;
     const double ay = Fy / m;

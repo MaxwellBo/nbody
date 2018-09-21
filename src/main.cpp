@@ -20,6 +20,8 @@ const bool ENABLE_BARNES_HUT = false;
 const bool ENABLE_LEAPFROG = true;
 const bool ENABLE_LOGGING = true;
 
+const int root = 0;
+
 double cpu_time(void) {
     return (double)clock() / (double)CLOCKS_PER_SEC;
 }
@@ -132,9 +134,8 @@ void dump_meta_info(
 }
 
 
-void broadcast_bodies(std::vector<Body> bodies, int rank) {
+void broadcast_bodies(std::vector<Body> bodies, int size, int rank) {
     size_t bodies_n = bodies.size();
-    int broadcast_root = 0;
     
     double x[bodies_n];
     double y[bodies_n];
@@ -143,7 +144,7 @@ void broadcast_bodies(std::vector<Body> bodies, int rank) {
 
     // This essentially round-trips the data for rank == 0 (which is good)
     // meaning it gets copied to all other nodes
-    if (rank == broadcast_root) {
+    if (rank == root) {
         for (size_t i = 0; i < bodies.size(); i++) {
             auto& body = bodies[i];
             x[i] = body.x;
@@ -153,12 +154,12 @@ void broadcast_bodies(std::vector<Body> bodies, int rank) {
         }
     }
 
-    MPI_Bcast(x, bodies_n, MPI_DOUBLE, broadcast_root, MPI_COMM_WORLD);
-    MPI_Bcast(y, bodies_n, MPI_DOUBLE, broadcast_root, MPI_COMM_WORLD);
-    MPI_Bcast(vx, bodies_n, MPI_DOUBLE, broadcast_root, MPI_COMM_WORLD);
-    MPI_Bcast(vy, bodies_n, MPI_DOUBLE, broadcast_root, MPI_COMM_WORLD);
+    MPI_Bcast(x, bodies_n, MPI_DOUBLE, root, MPI_COMM_WORLD);
+    MPI_Bcast(y, bodies_n, MPI_DOUBLE, root, MPI_COMM_WORLD);
+    MPI_Bcast(vx, bodies_n, MPI_DOUBLE, root, MPI_COMM_WORLD);
+    MPI_Bcast(vy, bodies_n, MPI_DOUBLE, root, MPI_COMM_WORLD);
 
-    if (rank != broadcast_root) {
+    if (rank != root) {
         for (size_t i = 0; i < bodies.size(); i++) {
             auto& body = bodies[i];
             body.x = x[i];
@@ -167,6 +168,179 @@ void broadcast_bodies(std::vector<Body> bodies, int rank) {
             body.vy = vy[i];
         }
     }
+}
+
+std::vector<Body> scatter_bodies(std::vector<Body> bodies, int size, int rank) {
+    unsigned int bodies_n = bodies.size();
+
+    std::vector<int> send_counts = {};
+    std::vector<int> displacements = {};
+    int displacement_acc = 0;
+    int remainder = bodies_n;
+    int chunk = ceil(bodies_n / size);
+    while (remainder - chunk > 0) {
+        displacements.push_back(displacement_acc);
+        send_counts.push_back(chunk);
+        displacement_acc += (chunk + 1);
+    }
+    displacements.push_back(displacement_acc);
+    send_counts.push_back(remainder);
+    unsigned int send_count = send_counts[rank];
+    unsigned int displacement = displacements[rank];
+
+    fprintf(stderr, "Sent %d from displacement %d from rank%d\n", send_count, displacement, rank);
+
+    double m[bodies_n]; // boi she a THICC SCATTER
+    double x[bodies_n];
+    double y[bodies_n];
+    double vx[bodies_n];
+    double vy[bodies_n];
+    double Fx[bodies_n];
+    double Fy[bodies_n];
+
+    if (rank == root) {
+        for (size_t i = 0; i < bodies.size(); i++) {
+            auto& body = bodies[i];
+            m[i] = body.m;
+            x[i] = body.x;
+            y[i] = body.y;
+            vx[i] = body.vx;
+            vy[i] = body.vy;
+            Fx[i] = body.Fx;
+            Fy[i] = body.Fy;
+        }
+    }
+
+    // Create buffers that will hold a subset of the bodies
+    double sm[send_count];
+    double sx[send_count];
+    double sy[send_count];
+    double svx[send_count];
+    double svy[send_count];
+    double sFx[send_count];
+    double sFy[send_count];
+
+    // Scatter the bodies to all processes
+    MPI_Scatterv(m, send_counts.data(), displacements.data(), MPI_DOUBLE, sm, send_count, MPI_DOUBLE, root, MPI_COMM_WORLD);
+    MPI_Scatterv(x, send_counts.data(), displacements.data(), MPI_DOUBLE, sx, send_count, MPI_DOUBLE, root, MPI_COMM_WORLD);
+    MPI_Scatterv(y, send_counts.data(), displacements.data(), MPI_DOUBLE, sy, send_count, MPI_DOUBLE, root, MPI_COMM_WORLD);
+    MPI_Scatterv(vx, send_counts.data(), displacements.data(), MPI_DOUBLE, svx, send_count, MPI_DOUBLE, root, MPI_COMM_WORLD);
+    MPI_Scatterv(vy, send_counts.data(), displacements.data(), MPI_DOUBLE, svy, send_count, MPI_DOUBLE, root, MPI_COMM_WORLD);
+    MPI_Scatterv(Fx, send_counts.data(), displacements.data(), MPI_DOUBLE, sFx, send_count, MPI_DOUBLE, root, MPI_COMM_WORLD);
+    MPI_Scatterv(Fy, send_counts.data(), displacements.data(), MPI_DOUBLE, sFy, send_count, MPI_DOUBLE, root, MPI_COMM_WORLD);
+
+    std::vector<Body> sbodies = {};
+
+    // Re-assemble our bodies
+    for (size_t i = 0; i < send_count; i++) {
+        Body body = Body();
+
+        body.m = sm[i];
+        body.x = sx[i];
+        body.y = sy[i];
+        body.vx = svx[i];
+        body.vy = svy[i];
+        body.Fx = sFx[i];
+        body.Fy = sFy[i];
+
+        sbodies.push_back(body);
+    }
+
+    return sbodies;
+}
+
+std::vector<Body> gather_bodies(std::vector<Body> sbodies, int size, int rank, unsigned int bodies_n) {
+    std::vector<int> send_counts = {};
+    std::vector<int> displacements = {};
+    int displacement_acc = 0;
+    int remainder = bodies_n;
+    int chunk = ceil(bodies_n / size);
+    while (remainder - chunk > 0) {
+        displacements.push_back(displacement_acc);
+        send_counts.push_back(chunk);
+        displacement_acc += (chunk + 1);
+    }
+    displacements.push_back(displacement_acc);
+    send_counts.push_back(remainder);
+    unsigned int send_count = send_counts[rank];
+    unsigned int displacement = displacements[rank];
+
+    fprintf(stderr, "Gathering %d into displacement %d [from rank%d]\n", send_count, displacement, rank);
+    assert(send_count == sbodies.size());
+
+    double sm[send_count];
+    double sx[send_count];
+    double sy[send_count];
+    double svx[send_count];
+    double svy[send_count];
+    double sFx[send_count];
+    double sFy[send_count];
+
+    for (unsigned int i = 0; i < send_count; i++) {
+        auto& body = sbodies[i];
+        sm[i] = body.m;
+        sx[i] = body.x;
+        sy[i] = body.y;
+        svx[i] = body.vx;
+        svy[i] = body.vy;
+        sFx[i] = body.Fx;
+        sFy[i] = body.Fy;
+    }
+
+    void *m = NULL;
+    void *x = NULL;
+    void *y = NULL;
+    void *vx = NULL;
+    void *vy = NULL;
+    void *Fx = NULL;
+    void *Fy = NULL;
+
+    if (rank == root) {
+      m = malloc(sizeof(double) * bodies_n);
+      x = malloc(sizeof(double) * bodies_n);
+      y = malloc(sizeof(double) * bodies_n);
+      vx = malloc(sizeof(double) * bodies_n);
+      vy = malloc(sizeof(double) * bodies_n);
+      Fx = malloc(sizeof(double) * bodies_n);
+      Fy = malloc(sizeof(double) * bodies_n);
+    }
+
+    MPI_Gatherv(sm, send_count, MPI_DOUBLE, m, send_counts.data(), displacements.data(), MPI_DOUBLE, root, MPI_COMM_WORLD);
+    MPI_Gatherv(sx, send_count, MPI_DOUBLE, x, send_counts.data(), displacements.data(), MPI_DOUBLE, root, MPI_COMM_WORLD);
+    MPI_Gatherv(sy, send_count, MPI_DOUBLE, y, send_counts.data(), displacements.data(), MPI_DOUBLE, root, MPI_COMM_WORLD);
+    MPI_Gatherv(svx, send_count, MPI_DOUBLE, vx, send_counts.data(), displacements.data(), MPI_DOUBLE, root, MPI_COMM_WORLD);
+    MPI_Gatherv(svy, send_count, MPI_DOUBLE, vy, send_counts.data(), displacements.data(), MPI_DOUBLE, root, MPI_COMM_WORLD);
+    MPI_Gatherv(sFx, send_count, MPI_DOUBLE, Fx, send_counts.data(), displacements.data(), MPI_DOUBLE, root, MPI_COMM_WORLD);
+    MPI_Gatherv(sFy, send_count, MPI_DOUBLE, Fy, send_counts.data(), displacements.data(), MPI_DOUBLE, root, MPI_COMM_WORLD);
+
+    std::vector<Body> bodies = {};
+
+    if (rank == root) {
+        // Re-assemble our bodies
+        for (size_t i = 0; i < bodies_n; i++) {
+            Body body = Body();
+
+            body.m = sm[i];
+            body.x = sx[i];
+            body.y = sy[i];
+            body.vx = svx[i];
+            body.vy = svy[i];
+            body.Fx = sFx[i];
+            body.Fy = sFy[i];
+
+            bodies.push_back(body);
+        }
+
+        free(m);
+        free(x);
+        free(y);
+        free(vx);
+        free(vy);
+        free(Fx);
+        free(Fy);
+    }
+
+    return bodies;
 }
 
 /*
@@ -266,11 +440,10 @@ int main(int argc, char **argv) {
     std::vector<Body> bodies = parse_input_file(input_fh);
 
     double start = cpu_time();
+    double t = 0; 
+    unsigned int step = 0;
 
-    if (rank == 0) {
-        double t = 0; 
-        unsigned int step = 0;
-
+    if (rank == root) {
         dump_meta_info(num_time_steps, output_interval, timestep, bodies);
         dump_masses(bodies);
         dump_timestep(t, bodies);
@@ -278,9 +451,11 @@ int main(int argc, char **argv) {
         fprintf(stderr, "Barnes-Hut enabled: %s\n", ENABLE_BARNES_HUT ? "true" : "false");
         fprintf(stderr, "Leapfrog enabled: %s\n", ENABLE_LEAPFROG ? "true" : "false");
         fprintf(stderr, "OMP Max threads: %d\n", omp_get_max_threads());
+    }
 
-        while (step < desired_simulation_steps) {
-            QuadTree root;
+    while (step < desired_simulation_steps) {
+        if (rank == root) {
+            QuadTree qroot;
 
             // only the Frog step (not the Leap step) needs updated forces
             // hence all the (step % 2 == FROG) tests
@@ -295,9 +470,9 @@ int main(int argc, char **argv) {
                     // called "radius". We're trying to make a QuadTree that encapsulates
                     // the most distant body
 
-                    root = QuadTree(root_x, root_y, radius);
+                    qroot = QuadTree(root_x, root_y, radius);
 
-                    assert(root.insert_all(bodies));
+                    assert(qroot.insert_all(bodies));
                 }
 
                 #pragma omp parallel for shared(bodies)
@@ -306,7 +481,7 @@ int main(int argc, char **argv) {
                     body.reset_force();
 
                     if (ENABLE_BARNES_HUT) {
-                        root.calculate_force(body);
+                        qroot.calculate_force(body);
                     }
                 }
 
@@ -335,64 +510,30 @@ int main(int argc, char **argv) {
                     }
                 }
             }
+        }
 
+        std::vector<Body> sbodies = scatter_bodies(bodies, size, rank);
 
-            int send_count = (bodies.size() / size) + 1;
+        #pragma omp parallel for shared(bodies)
+        for (size_t i = 0; i < sbodies.size(); i++) {
+            auto& body = sbodies[i];
 
-            MPI_Scatter(
-                        void* send_data,
-                            int send_count,
-                                MPI_Datatype send_datatype,
-                                    void* recv_data,
-                                        int recv_count,
-                                            MPI_Datatype recv_datatype,
-                                                int root,
-                                                    MPI_Comm communicator)
-            if (world_rank == 0) {
-              rand_nums = create_rand_nums(elements_per_proc * world_size);
+            if (step % 2 == LEAP) {
+                body.leap(timestep);
             }
-
-            // Create a buffer that will hold a subset of the random numbers
-            float *sub_rand_nums = malloc(sizeof(float) * elements_per_proc);
-
-            // Scatter the random numbers to all processes
-            MPI_Scatter(rand_nums, elements_per_proc, MPI_FLOAT, sub_rand_nums,
-                        elements_per_proc, MPI_FLOAT, 0, MPI_COMM_WORLD);
-
-            // Compute the average of your subset
-            float sub_avg = compute_avg(sub_rand_nums, elements_per_proc);
-            // Gather all partial averages down to the root process
-            float *sub_avgs = NULL;
-            if (world_rank == 0) {
-              sub_avgs = malloc(sizeof(float) * world_size);
+            else {
+                body.frog(timestep);
             }
-            MPI_Gather(&sub_avg, 1, MPI_FLOAT, sub_avgs, 1, MPI_FLOAT, 0,
-                       MPI_COMM_WORLD);
+        }
 
-            // Compute the total average of all numbers.
-            if (world_rank == 0) {
-              float avg = compute_avg(sub_avgs, world_size);
-            } 
+        bodies = gather_bodies(sbodies, size, rank, bodies.size());
 
-            #pragma omp parallel for shared(bodies)
-            for (size_t i = 0; i < bodies.size(); i++) {
-                auto& body = bodies[i];
+        t += halfstep;
+        step++;
 
-                if (step % 2 == LEAP) {
-                    body.leap(timestep);
-                }
-                else {
-                    body.frog(timestep);
-                }
-            }
-
-            t += halfstep;
-            step++;
-
+        if (rank == root) {
             if (step % output_simulation_step_interval == 0) {
-                if (rank == 0) {
-                    dump_timestep(t, bodies);
-                }
+                dump_timestep(t, bodies);
             }
         }
     }
