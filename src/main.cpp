@@ -472,12 +472,14 @@ int main(int argc, char **argv) {
                 }
             }
         }
-        // std::vector<Body> sbodies = scatter_bodies(bodies, size, rank);
-        // std::vector<Body bodies = sbodies;
 
-        #pragma omp parallel for shared(bodies)
-        for (size_t i = 0; i < bodies.size(); i++) {
-            auto& body = bodies[i];
+        
+        // std::vector<Body> sbodies = scatter_bodies(bodies, size, rank);
+        std::vector<Body> sbodies = bodies;
+
+        #pragma omp parallel for shared(sbodies)
+        for (size_t i = 0; i < sbodies.size(); i++) {
+            auto& body = sbodies[i];
 
             if (step % 2 == LEAP) {
                 body.leap(timestep);
