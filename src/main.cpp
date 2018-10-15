@@ -8,7 +8,7 @@
 #include <limits>
 #include <omp.h>
 #include <mpi.h>
-#include <cmath.h>
+#include <cmath>
 
 #include "Body.hpp"
 #include "QuadTree.hpp"
