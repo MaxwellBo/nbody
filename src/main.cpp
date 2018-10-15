@@ -262,7 +262,6 @@ int main(int argc, char **argv) {
     MPI_Type_contiguous(7, MPI_DOUBLE, &MPI_Body); // 7 doubles in the Body struct
     MPI_Type_commit(&MPI_Body);
 
-
     // ---------------------------------------------------------------------//
 
     const unsigned int num_time_steps = std::stoi(argv[1]);
@@ -309,9 +308,9 @@ int main(int argc, char **argv) {
         dump_masses(bodies);
         dump_timestep(t, bodies);
 
-        fprintf(stderr, "Barnes-Hut enabled: %s\n", ENABLE_BARNES_HUT ? "true" : "false");
-        fprintf(stderr, "Leapfrog enabled: %s\n", ENABLE_LEAPFROG ? "true" : "false");
-        fprintf(stderr, "OMP Max threads: %d\n", omp_get_max_threads());
+        fprintf(stdout, "Barnes-Hut enabled: %s\n", ENABLE_BARNES_HUT ? "true" : "false");
+        fprintf(stdout, "Leapfrog enabled: %s\n", ENABLE_LEAPFROG ? "true" : "false");
+        fprintf(stdout, "OMP Max threads: %d\n", omp_get_max_threads());
     }
 
     // ---------------------------------------------------------------------//
@@ -374,8 +373,7 @@ int main(int argc, char **argv) {
             }
         }
 
-    
-        scatter_bodies(bodies, sbodies, rank, displacements, send_counts);
+        scatter_bodies(bodies, sbodies, rank, send_counts, displacements);
 
         #pragma omp parallel for shared(sbodies)
         for (size_t i = 0; i < sbodies.size(); i++) {
@@ -389,7 +387,7 @@ int main(int argc, char **argv) {
             }
         }
 
-        gather_bodies(bodies, sbodies, rank, displacements, send_counts);
+        gather_bodies(bodies, sbodies, rank, send_counts, displacements);
 
         t += halfstep;
         step++;
