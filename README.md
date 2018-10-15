@@ -11,4 +11,3 @@ e.g. `./run.sh in_8_body_counterclockwise`
 - `make`
 - `sbatch go.sh`
 
-
