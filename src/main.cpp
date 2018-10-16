@@ -384,11 +384,8 @@ int main(int argc, char **argv) {
             }
         }
 
-        scatter_bodies(bodies, sbodies, rank, send_counts, displacements);
-
-        #pragma omp parallel for shared(sbodies)
-        for (size_t i = 0; i < sbodies.size(); i++) {
-            auto& body = sbodies[i];
+        for (size_t i = 0; i < bodies.size(); i++) {
+            auto& body = bodies[i];
 
             if (step % 2 == LEAP) {
                 body.leap(timestep);
@@ -397,8 +394,6 @@ int main(int argc, char **argv) {
                 body.frog(timestep);
             }
         }
-
-        gather_bodies(bodies, sbodies, rank, send_counts, displacements);
 
         t += halfstep;
         step++;
