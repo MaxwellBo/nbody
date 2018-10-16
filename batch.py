@@ -98,6 +98,9 @@ def make_batch(
     return name, batch_args + LOGGING + invocation
 
 def main():
+    for n in BODIES:
+        generate_inputs(n)
+
     for (bodies, nodes, tasks, cpus_per_task, enable_barnes_hut)\
     in product(BODIES, NODES, TASKS, CPUS_PER_TASK, ENABLE_BARNES_HUT):
         name, batch = make_batch(
