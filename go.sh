@@ -1,9 +1,9 @@
 #!/bin/bash
-#SBATCH --partition=smp
+#SBATCH --partition=cosc
 #SBATCH --job-name=mbody
-#SBATCH --nodes=4
-#SBATCH --ntasks=4
-#SBATCH --cpus-per-task=4
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=16
 #SBATCH --error=stderr.log
 
 DATE=$(date +"%Y%m%d%H%M")
@@ -14,4 +14,4 @@ echo $SLURM_NODELIST
 echo "running with OMP_NUM_THREADS=$OMP_NUM_THREADS "
 echo "running with SLURM_TASKS_PER_NODE=$SLURM_TASKS_PER_NODE "
 echo "--------------------:"
-time mpirun -n ${SLURM_NPROCS} ./nbody 5 1 1 inputs/in_12_body_counterclockwise
+time mpirun -n ${SLURM_NPROCS} ./nbody 1000000 1666.6666666666667 1e-05 inputs/in_8_body_counterclockwise

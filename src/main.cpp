@@ -141,15 +141,6 @@ void scatter_bodies(const std::vector<Body>& bodies, std::vector<Body>& sbodies,
     const std::vector<int>& send_counts, const std::vector<int>& displacements) {
 
     unsigned int receive_count = send_counts[rank];
-    unsigned int displacement = displacements[rank];
-
-    if (ENABLE_DEBUG_LOGGING) {
-        if (rank == 0) {
-            fprintf(stderr, "[%d] Scattering %d from displacement %d\n", rank, receive_count, displacement);
-        } else {
-            fprintf(stderr, "[%d] Receiving %d from scatter into displacement %d\n", rank, receive_count, displacement);
-        }
-    }
 
     MPI_Scatterv(
         bodies.data(), // sendbuf
@@ -168,15 +159,6 @@ void gather_bodies(std::vector<Body>& bodies, const std::vector<Body>& sbodies, 
     const std::vector<int>& receive_counts, const std::vector<int>& displacements) {
 
     unsigned int send_count = receive_counts[rank];
-    unsigned int displacement = displacements[rank];
-
-    if (ENABLE_DEBUG_LOGGING) {
-        if (rank == 0) {
-            fprintf(stderr, "[%d] Gathering %d into displacement %d\n", rank, send_count, displacement);
-        } else {
-            fprintf(stderr, "[%d] Sending %d for gather from displacement %d\n", rank, send_count, displacement);
-        }
-    }
 
     MPI_Gatherv(
         sbodies.data(), // sendbuf
@@ -273,7 +255,7 @@ int main(int argc, char **argv) {
     MPI_Init(&argc, &argv);
     MPI_Comm_size(comm, &size); // Get the number of processes
     MPI_Comm_rank(comm, &rank); // Get the rank of the process
-    MPI_Type_contiguous(7, MPI_DOUBLE, &MPI_Body); // 7 doubles in the Body struct
+    MPI_Type_contiguous(8, MPI_DOUBLE, &MPI_Body); // 8 doubles in the Body struct
     MPI_Type_commit(&MPI_Body);
 
     // ---------------------------------------------------------------------//
@@ -326,8 +308,7 @@ int main(int argc, char **argv) {
     }
     fprintf(stderr, "\n");
 
-    std::vector<Body> sbodies = {};
-    sbodies.reserve(send_counts[rank]);
+    std::vector<Body> sbodies(send_counts[rank]);
 
     // ---------------------------------------------------------------------//
 
