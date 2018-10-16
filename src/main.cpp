@@ -22,7 +22,6 @@ const unsigned int FROG = 1;
 const bool ENABLE_BARNES_HUT = false;
 const bool ENABLE_LEAPFROG = true;
 const bool ENABLE_LOGGING = false;
-const bool ENABLE_DEBUG_LOGGING = true;
 
 const int root = 0;
 
