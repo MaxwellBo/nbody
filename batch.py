@@ -40,7 +40,27 @@ delta_t = time / num_time_steps
 def generate_inputs(bodies):
     with open("batchin/" + str(bodies), "w+") as f:
 
+        print(bodies, file=f)
 
+        print(str(bodies * 10) + "e14", file=f) # sun 
+
+        for i in range(1, bodies):
+            print(str(i) + "e14", file=f) # small bodies start on the inside
+
+        print(0.00, 10, file=f)
+
+        print(0, 0, 0, 0, file=f) # sun
+
+        for i in range(1, bodies):
+            inverse = bodies - i
+
+            print(
+                0,
+                0 + i * 10,
+                0 + inverse + 10,
+                0,
+                file=f
+            )
 
 def make_batch(
     bodies,
