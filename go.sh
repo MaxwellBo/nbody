@@ -1,9 +1,9 @@
 #!/bin/bash
 #SBATCH --partition=smp
 #SBATCH --job-name=mbody
-#SBATCH --nodes=1
-#SBATCH --ntasks=1
-#SBATCH --cpus-per-task=1
+#SBATCH --nodes=4
+#SBATCH --ntasks=4
+#SBATCH --cpus-per-task=4
 #SBATCH --error=stderr.log
 
 DATE=$(date +"%Y%m%d%H%M")

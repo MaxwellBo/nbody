@@ -21,7 +21,8 @@ const unsigned int FROG = 1;
 
 const bool ENABLE_BARNES_HUT = false;
 const bool ENABLE_LEAPFROG = true;
-const bool ENABLE_LOGGING = true;
+const bool ENABLE_LOGGING = false;
+const bool ENABLE_DEBUG_LOGGING = true;
 
 const int root = 0;
 
@@ -138,10 +139,17 @@ void dump_meta_info(
 
 void scatter_bodies(const std::vector<Body>& bodies, std::vector<Body>& sbodies, int rank, 
     const std::vector<int>& send_counts, const std::vector<int>& displacements) {
+
     unsigned int receive_count = send_counts[rank];
     unsigned int displacement = displacements[rank];
 
-    fprintf(stderr, "Sent %d from displacement %d from rank%d\n", receive_count, displacement, rank);
+    if (ENABLE_DEBUG_LOGGING) {
+        if (rank == 0) {
+            fprintf(stderr, "[%d] Scattering %d from displacement %d\n", rank, receive_count, displacement);
+        } else {
+            fprintf(stderr, "[%d] Receiving %d from scatter into displacement %d\n", rank, receive_count, displacement);
+        }
+    }
 
     MPI_Scatterv(
         bodies.data(), // sendbuf
@@ -162,7 +170,13 @@ void gather_bodies(std::vector<Body>& bodies, const std::vector<Body>& sbodies, 
     unsigned int send_count = receive_counts[rank];
     unsigned int displacement = displacements[rank];
 
-    fprintf(stderr, "Gathering %d into displacement %d [from rank%d]\n", send_count, displacement, rank);
+    if (ENABLE_DEBUG_LOGGING) {
+        if (rank == 0) {
+            fprintf(stderr, "[%d] Gathering %d into displacement %d\n", rank, send_count, displacement);
+        } else {
+            fprintf(stderr, "[%d] Sending %d for gather from displacement %d\n", rank, send_count, displacement);
+        }
+    }
 
     MPI_Gatherv(
         sbodies.data(), // sendbuf
@@ -247,7 +261,7 @@ std::vector<Body> parse_input_file(std::ifstream& input_fh) {
 
 int main(int argc, char **argv) {
     if (argc != 5) {
-        fprintf(stderr, "numTimeSteps outputInterval deltaT inputFile\n");
+        fprintf(stdout, "numTimeSteps outputInterval deltaT inputFile\n");
         exit(1);
     }
 
@@ -282,18 +296,35 @@ int main(int argc, char **argv) {
 
     std::vector<int> send_counts = {};
     std::vector<int> displacements = {};
+
     int displacement_acc = 0;
     int remainder = bodies_n;
     int chunk = ceil(bodies_n / size);
 
+
     while (remainder - chunk > 0) {
         displacements.push_back(displacement_acc);
         send_counts.push_back(chunk);
-        displacement_acc += (chunk + 1);
+        displacement_acc += (chunk);
+        remainder -= chunk;
     }
 
     displacements.push_back(displacement_acc);
     send_counts.push_back(remainder);
+
+    fprintf(stderr, "Displacements\n");
+    for (size_t i = 0; i < displacements.size(); i++) {
+        fprintf(stderr, "%d ", displacements[i]);
+
+    }
+    fprintf(stderr, "\n");
+
+    fprintf(stderr, "Send counts\n");
+    for (size_t i = 0; i < send_counts.size(); i++) {
+        fprintf(stderr, "%d ", send_counts[i]);
+
+    }
+    fprintf(stderr, "\n");
 
     std::vector<Body> sbodies = {};
     sbodies.reserve(send_counts[rank]);
@@ -308,9 +339,8 @@ int main(int argc, char **argv) {
         dump_masses(bodies);
         dump_timestep(t, bodies);
 
-        fprintf(stdout, "Barnes-Hut enabled: %s\n", ENABLE_BARNES_HUT ? "true" : "false");
-        fprintf(stdout, "Leapfrog enabled: %s\n", ENABLE_LEAPFROG ? "true" : "false");
-        fprintf(stdout, "OMP Max threads: %d\n", omp_get_max_threads());
+        fprintf(stderr, "Barnes-Hut enabled: %s\n", ENABLE_BARNES_HUT ? "true" : "false");
+        fprintf(stderr, "OMP Max threads: %d\n", omp_get_max_threads());
     }
 
     // ---------------------------------------------------------------------//
@@ -321,7 +351,7 @@ int main(int argc, char **argv) {
 
         // only the Frog step (not the Leap step) needs updated forces
         // hence all the (step % 2 == FROG) tests
-        const bool need_force_calc = (rank == root) || step % 2 == FROG;
+        const bool need_force_calc = (rank == root) && (step % 2 == FROG);
 
         if (need_force_calc) {
             if (ENABLE_BARNES_HUT) {
@@ -413,14 +443,14 @@ int main(int argc, char **argv) {
 
         fprintf(
             log_fh,
-            ",\n{ 'numTimeSteps': %d, 'inputFile': '%s', 'numBodies': %d, 'time': %lf, 'leapfrog': %s, 'barnesHut': %s, 'precomputedGm': true, 'ompMaxThreads': %d }",
+            ",\n{ 'numTimeSteps': %d, 'inputFile': '%s', 'numBodies': %d, 'time': %lf, 'barnesHut': %s, 'precomputedGm': true, 'ompMaxThreads': %d, 'mpi': %d }",
             num_time_steps,
             input_filename.c_str(),
             static_cast<int>(bodies.size()), // thank-you Joel
             cpu_time_elapsed,
-            ENABLE_LEAPFROG ? "true" : "false",
             ENABLE_BARNES_HUT ? "true" : "false",
-            omp_get_max_threads()
+            omp_get_max_threads(),
+            size
         );
 
         fclose(log_fh);
