@@ -232,7 +232,7 @@ diff --git a/Assignment_1/src/Body.cpp b/Assignment_1/src/Body.cpp
 Precomputing $Gm$ yielded a 3\%ish performance improvement.
 
 \section*{Parallelism}
-A description of your parallel implementation. How do you make use of OpenMP and MPI? How is information and work shared between threads and processes.  Any optimisations applied and/or challenges encountered will go here.
+% A description of your parallel implementation. How do you make use of OpenMP and MPI? How is information and work shared between threads and processes.  Any optimisations applied and/or challenges encountered will go here.
 \subsection*{Implementation}
 \subsubsection*{OpenMP}
 
@@ -302,6 +302,9 @@ The \textit{Leapfrog} step is the easiest step to distribute amongst many nodes,
 This can be achieved with \texttt{MPI\_Scatterv} and \texttt{MPI\_Gatherv}
 \footnote{These \texttt{v} variants support custom chunking sizes e.g. if we have 15 bodies we can send $4, 4, 4, 3$ bodies to each node respectively, which \texttt{MPI\_Scatter} and \texttt{MPI\_Gather} do not support dynamic chunking}. We decompose each dimension of our \texttt{Body}s into arrays, (e.g. the $x$ position, the $x$ veolocity, etc.), \texttt{MPI\_Scatterv} these arrays, recompose them into \texttt{Body}s, run \texttt{Leapfrog} on this subset on each node, decompose the subset into arrays, \texttt{MPI\_Gatherv} these arrays back to the root node, and recompose them into $\texttt{Bodys}$.
 
+\includegraphics[width=7cm]{mpi_scatter}
+\includegraphics[width=7cm]{mpi_gather}
+
 \begin{verbatim}
 std::vector<Body> sbodies = scatter_bodies(bodies, size, rank);
 
@@ -324,8 +327,13 @@ where \texttt{sbodies} is our subset of bodies distributed to each node.
 
 Because force calculation is only performed on the root node, this messaging architecture is \textit{master-slave}, where the root node coordinates gathers and scatters. Slave nodes, are, unfortunately, underutilized. Further work could be sent distributing force calculation work, doing away with a root node entirely, except for logging.
 
-\includegraphics[width=3cm]{mpi_gather}
-\includegraphics[width=3cm]{mpi_scatter}
+\begin{verbatim}
+Total CPU time on rank 0 was 89.820000
+Total CPU time on rank 2 was 36.750000
+Total CPU time on rank 3 was 36.960000
+Total CPU time on rank 1 was 37.040000
+\end{verbatim}
+
 
 % A description of how you have verified the correctness of your parallel implementation. (See comments for MS1)
 \subsection*{Verification \& Correctness}
@@ -343,10 +351,11 @@ We have mulitple dimensions that we can change to measure the scalability of the
 \begin{enumerate}
     \item The number of bodies ($n$) (\texttt{512, 1024, 2048, 4096, 8192, 16384})
     \item \texttt{ENABLE\_BARNES\_HUT} (\texttt{true, false})
-    \item \texttt{--nodes} (\texttt{1, 4, 16})
+    \item \texttt{--nodes} (\texttt{Disabled, 1, 4, 16})
     \item \texttt{--ntasks} (\texttt{1, 4, 16})
     \item \texttt{--ntasks-per-node} (\texttt{1, 4})
     \item \texttt{--cpus-per-task} (\texttt{1, 4, 16})
+    \item \texttt{\#pragma omp parallel schedule(static, dynamic, guided)}
 \end{enumerate}
 
 Running tests with all valid combinations of these variables, with a \texttt{numTimeSteps} as low as 8, would produce useful data, across multiple dimension, with minimal load on cluster. It would be unlikely that this plan would be curtailed.
