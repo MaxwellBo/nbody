@@ -1,3 +1,4 @@
+from __future__ import print_function
 from itertools import product
 
 BODIES = [16, 64, 256, 1024, 4096]
@@ -14,6 +15,7 @@ BATCH_ARGS = """#!/bin/bash
 #SBATCH --cpus-per-task={cpus_per_task}
 #SBATCH --error=batcherr/{name}.log
 #SBATCH --output=batchout/{name}.out
+#SBATCH --time=0:10:00
 """
 
 LOGGING = """DATE=$(date +"%Y%m%d%H%M")
@@ -38,7 +40,7 @@ output_interval = (num_time_steps / time) / fps
 delta_t = time / num_time_steps
 
 def generate_inputs(bodies):
-    with open("batchin/" + str(bodies), "w+") as f:
+    with open("batchin/{bodies}.in".format(bodies=bodies), "w+") as f:
 
         print(bodies, file=f)
 
@@ -114,6 +116,5 @@ def main():
         with open("batches/" + name, "w+") as f:
             f.write(batch)
 
-        
 if __name__ == "__main__":
     main()
