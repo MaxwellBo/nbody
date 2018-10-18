@@ -72,20 +72,39 @@ def ms3():
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
 
-        # For each set of style and range settings, plot n random points in the box
-        # defined by x in [23, 32], y in [0, 100], z in [zlow, zhigh].
-        # for c, m, zlow, zhigh in [('r', 'o', -50, -25), ('b', '^', -30, -5)]:
+        bodies = 1024
 
-        xs = [ i["tasks"] for i in data if i["numBodies"] == 1024 ]
-        ys = [ i["nodes"] for i in data if i ["numBodies"] == 1024 ] 
-        zs = [ i["time"] for i in data if i["numBodies"] == 1024 ]
+        valid_data = [ i for i in data if "time" in i and i["bodies"] == bodies ]
 
-        ax.scatter(xs, ys, zs, c="r", marker="o")
+        x = {
+            "label": "CPUs per task",
+            "field": "cpusPerTask"
+        }
 
-        ax.set_xlabel('Tasks')
-        ax.set_ylabel('Nodes')
-        ax.set_zlabel('Time')
+        y = {
+            "label": "nodes",
+            "field": "nodes"
+        }
 
+        for c, m, data, label in [
+            ('b', 'o', [ i for i in valid_data if not i["enable_barnes_hut"]], "No Barnes-Hut"), 
+            ('r', '^', [ i for i in valid_data if i["enable_barnes_hut"]], "Barnes-Hut")
+        ]:
+            xs = [ i[x["field"]] for i in data ]
+            ys = [ i[y["field"]] for i in data ]
+            zs = [ i["time"] for i in data ]
+            ax.scatter(xs, ys, zs, c=c, marker=m, label=label)
+
+        ax.set_title("{bodies} bodies, 10 timesteps".format(bodies=bodies))
+        ax.set_xlabel('{label} (n)'.format(label=x["label"]))
+        ax.set_ylabel('{label} (n)'.format(label=y["label"]))
+        ax.set_zlabel('user + sys time (s)')
+
+        print()
+
+        ax.legend()
+
+        plt.savefig("reports/images/{bodies}-{xlabel}-{ylabel}".format(bodies=bodies, xlabel=x["field"], ylabel=y["field"]))
         plt.show()
 
 if __name__ == "__main__":
