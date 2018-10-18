@@ -369,19 +369,21 @@ In MS2, we decomposed each dimension of our \texttt{Body}s into arrays, (e.g. th
 By declaring \texttt{MPI\_Datatype MPI\_Body} with \texttt{MPI\_Type\_contiguous(8, MPI\_DOUBLE, \&MPI\_Body)}, we're now able to send and receive subsets of \texttt{Body}s with just a single \texttt{MPI\_Scatterv} and \texttt{MPI\_Gatherv} call. We also \texttt{MPI\_Scatterv} and \texttt{MPI\_Gatherv} directly into \texttt{Vector}s allocated at the start of the program, without intermediate array allocations. This eliminated transient out-of-memory errors, and likely reduced MPI overhead.
 
 
+\subsection*{Testing Performed}
 
 
+\begin{enumerate}
+    \item The number of bodies ($n$) (\texttt{4, 16, 64, 256, 1024, 4096})
+    \item \texttt{--nodes} (\texttt{1, 4, 8, 12})
+    \item \texttt{--ntasks} (\texttt{1, 4, 8, 12})
+    \item \texttt{--cpus-per-task} (\texttt{1, 4, 16})
+    \item \texttt{ENABLE\_BARNES\_HUT} (\texttt{true, false})
+\end{enumerate}
+
+All valid combinations\footnote{As an example, \texttt{TASKS = 1, NODES=12} is not an admissable configuration} of the values in the lists above were performed. Tweaks in the number of bodies (a step from 4 to 16 bodies is double the body density; tests with 16384 bodies did not terminate), the number of nodes (\texttt{dogmatix} only has 12 nodes in the \texttt{cosc} partition; it did not make sense to disable MPI), the number of tasks (it made sense allocate the same number of tasks and nodes)
 
 
-
-
-
-
-
-Report content
-   This content adds to the content from previous reports.  The ECP describes the previous reports as chapters, you can use this opportunity to do a cleanup edit of your previous content but you aren't required to do a major rewrite.
-The content you will be adding should contain:
-    The testing actually performed [Do not rewrite your previous section to match this]. Comment on any differences between your test plan and what you actually executed. Give your results.
+% The testing actually performed [Do not rewrite your previous section to match this]. Comment on any differences between your test plan and what you actually executed. Give your results.
     Analyse your results. Does your implementation scale? 
     Summarise your findings for the semester (eg what worked and what didn't) including any limitations you expect scaling up your implementation to solving truely massive problem instances.
 
