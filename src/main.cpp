@@ -414,7 +414,7 @@ int main(int argc, char **argv) {
         fprintf(stderr, "numTimeSteps: %d,\n", num_time_steps);
         fprintf(stderr, "outputInterval: %d,\n", output_interval);
         fprintf(stderr, "deltaT: %lf,\n", timestep);
-        fprintf(stderr, "inputFile: %s,\n", input_filename.c_str());
+        fprintf(stderr, "inputFile: \"%s\",\n", input_filename.c_str());
 
         fprintf(stderr, "enableBarnesHut: %d,\n", ENABLE_BARNES_HUT);
 

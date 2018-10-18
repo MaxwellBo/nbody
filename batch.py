@@ -1,5 +1,6 @@
 from __future__ import print_function
 from itertools import product
+import json
 
 BODIES = [4, 16, 64, 256, 1024, 4096]
 NODES = [1, 4, 8, 12]
@@ -38,6 +39,11 @@ fps = 1
 
 output_interval = (num_time_steps / time) / fps
 delta_t = time / num_time_steps
+
+def merge_two_dicts(x, y):
+    z = x.copy()
+    z.update(y)
+    return z
 
 def generate_inputs(bodies):
     with open("batchin/{bodies}.in".format(bodies=bodies), "w+") as f:
@@ -115,6 +121,47 @@ def main():
         )
 
         with open("batches/{name}.sh".format(name=name), "w+") as f:
+            f.write(batch)
+
+def analyse():
+    data = {
+        name: name
+    }
+
+    for (bodies, nodes, tasks, cpus_per_task, enable_barnes_hut)\
+    in product(BODIES, NODES, TASKS, CPUS_PER_TASK, ENABLE_BARNES_HUT):
+        name, batch = make_batch(
+            bodies=bodies,
+            nodes=nodes,
+            tasks=tasks,
+            cpus_per_task=cpus_per_task,
+            enable_barnes_hut=enable_barnes_hut
+        )
+
+
+        with open("./batchout/{name}.out".format(name=name), "w+") as o:
+            text = o.read()
+
+            slurm_details, body = text.split("----------------")
+
+            for line in slurm_details.split('\n')
+                k, v = line.split('=')
+
+                data[k] = v
+
+        with open("./batcherr/{name}.log".format(name=name)) as e:
+            text = e.read()
+            info, time = text.split('\n\n')
+            info_dict = json.loads("{" + info + "}")
+
+
+            _, info_dict["real"] = time.split('\n')[0].split()
+            _, info_dict["user"] = time.split('\n')[1].split()
+            _, info_dict["sys"] = time.split('\n')[1].split()
+
+            data = merge_two_dicts(data, info_dict)
+
+        with open("data.json", "w+") as f:
             f.write(batch)
 
 if __name__ == "__main__":
