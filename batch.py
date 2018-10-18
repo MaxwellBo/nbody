@@ -106,7 +106,7 @@ def make_batch(
 
     return name, batch_args + LOGGING + invocation
 
-def main():
+def batch():
     for n in BODIES:
         generate_inputs(n)
 
@@ -175,12 +175,18 @@ def analyse():
                         k, v = line.split()
                         entry[k] = v
 
-                # :-1 because there's a trailing comma
-                info_dict = json.loads("{" + info[:-1] + "}")
+                        m, s = v[:-1].split('m')
+                        total_seconds = (int(m) * 60) + int(s)
 
-            data.append(merge_two_dicts(entry, info_dict))
-            print("Success with {name}".format(name=name))
-            continue
+                        entry[k] = total_seconds
+                        entry["time"] = entry["user"] + entry["sys"]
+
+                    # :-1 because there's a trailing comma
+                    info_dict = json.loads("{" + info[:-1] + "}")
+
+                data.append(merge_two_dicts(entry, info_dict))
+                print("Success with {name}".format(name=name))
+                continue
         except:
             print("Failed to parse ./batcherr/{name}.log".format(name=name))
             data.append(entry)
@@ -193,6 +199,6 @@ if __name__ == "__main__":
     answer = raw_input("(b)atch or (a)nalyse? ")
 
     if answer == "b":
-        main()
+        batch()
     elif answer == "a":
         analyse()
