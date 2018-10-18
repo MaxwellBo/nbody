@@ -112,6 +112,9 @@ def main():
 
     for (bodies, nodes, tasks, cpus_per_task, enable_barnes_hut)\
     in product(BODIES, NODES, TASKS, CPUS_PER_TASK, ENABLE_BARNES_HUT):
+        if tasks < nodes:
+            continue
+
         name, batch = make_batch(
             bodies=bodies,
             nodes=nodes,
@@ -139,8 +142,6 @@ def analyse():
             enable_barnes_hut=enable_barnes_hut
         )
 
-        print("Parsing {name}".format(name=name))
-
         entry = {
             "name": name,
             "bodies": bodies,
@@ -150,30 +151,40 @@ def analyse():
             "enable_barnes_hut": enable_barnes_hut
         }
 
-        with open("./batchout/{name}.out".format(name=name)) as o:
-            text = o.read()
+        try:
+            with open("./batchout/{name}.out".format(name=name)) as o:
+                text = o.read()
 
-            slurm_details = text.split("----------------")[0]
+                slurm_details = text.split("----------------")[0]
 
-            for line in slurm_details.split('\n'):
-                if line != "":
-                    k, v = line.split('=')
-                    entry[k] = v
+                for line in slurm_details.split('\n'):
+                    if line != "":
+                        k, v = line.split('=')
+                        entry[k] = v
+        except:
+            print("Failed to parse ./batchout/{name}.out".format(name=name))
+            pass
 
+        try:
+            with open("./batcherr/{name}.log".format(name=name)) as e:
+                text = e.read()
+                info, time = text.split('\n\n')
 
-        with open("./batcherr/{name}.log".format(name=name)) as e:
-            text = e.read()
-            info, time = text.split('\n\n')
+                for line in time.split('\n'):
+                    if line != "":
+                        k, v = line.split()
+                        entry[k] = v
 
-            for line in time.split('\n'):
-                if line != "":
-                    k, v = line.split()
-                    entry[k] = v
-
-            # :-1 because there's a trailing comma
-            info_dict = json.loads("{" + info[:-1] + "}")
+                # :-1 because there's a trailing comma
+                info_dict = json.loads("{" + info[:-1] + "}")
 
             data.append(merge_two_dicts(entry, info_dict))
+            print("Success with {name}".format(name=name))
+            continue
+        except:
+            print("Failed to parse ./batcherr/{name}.log".format(name=name))
+            data.append(entry)
+            continue
 
     with open("data.json", "w+") as f:
         f.write(json.dumps(data))
