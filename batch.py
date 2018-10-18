@@ -83,7 +83,7 @@ def make_batch(
     name = "mbody-b{bodies}-n{nodes}-tpn{tasks_per_node}-cpt{cpus_per_task}".format(
         bodies=bodies,
         nodes=nodes,
-        tasks_per_node=task_per_node,
+        tasks_per_node=tasks_per_node,
         cpus_per_task=cpus_per_task
     )
 
@@ -94,7 +94,7 @@ def make_batch(
 
     batch_args = BATCH_ARGS.format(
         nodes=nodes,
-        tasks_per_node=task_per_node,
+        tasks_per_node=tasks_per_node,
         cpus_per_task=cpus_per_task,
         name=name
     )
@@ -114,15 +114,14 @@ def batch():
         generate_inputs(n)
 
     for (bodies, nodes, tasks_per_node, cpus_per_task, enable_barnes_hut)\
-    in product(BODIES, TASKS, TASKS_PER_NODE, CPUS_PER_TASK, ENABLE_BARNES_HUT):
+    in product(BODIES, NODES, TASKS_PER_NODE, CPUS_PER_TASK, ENABLE_BARNES_HUT):
         if cpus_per_task * tasks_per_node > 24:
             continue
 
         name, batch = make_batch(
             bodies=bodies,
             nodes=nodes,
-            tasks=tasks,
-            tasks_per_node=task_per_node,
+            tasks_per_node=tasks_per_node,
             cpus_per_task=cpus_per_task,
             enable_barnes_hut=enable_barnes_hut
         )
@@ -134,7 +133,7 @@ def analyse():
     data = []
 
     for (bodies, nodes, tasks_per_node, cpus_per_task, enable_barnes_hut)\
-    in product(BODIES, TASKS, TASKS_PER_NODE, CPUS_PER_TASK, ENABLE_BARNES_HUT):
+    in product(BODIES, NODES, TASKS_PER_NODE, CPUS_PER_TASK, ENABLE_BARNES_HUT):
         if cpus_per_task * tasks_per_node > 24:
             continue
 
