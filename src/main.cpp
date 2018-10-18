@@ -406,22 +406,22 @@ int main(int argc, char **argv) {
 
     const double cpu_time_elapsed = cpu_time() - start;
 
-    fprintf(stderr, "%d: %lf,\n", rank, cpu_time_elapsed);
+    fprintf(stderr, "\"%d\": %lf,\n", rank, cpu_time_elapsed);
 
     // ---------------------------------------------------------------------//
 
     if (rank == 0) {
-        fprintf(stderr, "numTimeSteps: %d,\n", num_time_steps);
-        fprintf(stderr, "outputInterval: %d,\n", output_interval);
-        fprintf(stderr, "deltaT: %lf,\n", timestep);
-        fprintf(stderr, "inputFile: \"%s\",\n", input_filename.c_str());
+        fprintf(stderr, "\"numTimeSteps\": %d,\n", num_time_steps);
+        fprintf(stderr, "\"outputInterval\": %d,\n", output_interval);
+        fprintf(stderr, "\"deltaT\": %lf,\n", timestep);
+        fprintf(stderr, "\"inputFile\": \"%s\",\n", input_filename.c_str());
 
-        fprintf(stderr, "enableBarnesHut: %d,\n", ENABLE_BARNES_HUT);
+        fprintf(stderr, "\"enableBarnesHut\": %d,\n", ENABLE_BARNES_HUT);
 
-        fprintf(stderr, "numBodies: %d,\n", static_cast<int>(bodies.size()));
+        fprintf(stderr, "\"numBodies\": %d,\n", static_cast<int>(bodies.size()));
 
-        fprintf(stderr, "ompMaxThreads: %d,\n", omp_get_max_threads());
-        fprintf(stderr, "mpiCommSize: %d,\n", size);
+        fprintf(stderr, "\"ompMaxThreads\": %d,\n", omp_get_max_threads());
+        fprintf(stderr, "\"mpiCommSize\": %d,\n", size);
     }
     
     return 0;
