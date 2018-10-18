@@ -15,7 +15,7 @@ BATCH_ARGS = """#!/bin/bash
 #SBATCH --cpus-per-task={cpus_per_task}
 #SBATCH --error=./batcherr/{name}.log
 #SBATCH --output=./batchout/{name}.out
-#SBATCH --time=0:05:00
+#SBATCH --time=0:00:10
 """
 
 LOGGING = """DATE=$(date +"%Y%m%d%H%M")
@@ -30,7 +30,7 @@ echo '----------------'
 """
 
 # numTimeSteps outputInterval deltaT inputFile
-INVOCATION = "time mpirun -n ${{SLURM_NPROCS}} ./nbody {numTimeSteps} {outputInterval} {deltaT} {inputFile} {enableBarnesHut}"
+INVOCATION = "time mpirun -n ${{SLURM_NPROCS}} ./nbody {numTimeSteps} {outputInterval} {deltaT} {inputFile} {enableBarnesHut}\n"
 
 num_time_steps = 10
 time = 10
