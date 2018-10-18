@@ -106,7 +106,7 @@ def make_batch(
 
     return name, batch_args + LOGGING + invocation
 
-def main():
+def batch():
     for n in BODIES:
         generate_inputs(n)
 
@@ -168,7 +168,13 @@ def analyse():
             for line in time.split('\n'):
                 if line != "":
                     k, v = line.split()
-                    entry[k] = v
+
+                    m, s = v[:-1].split('m')
+                    total_seconds = (int(m) * 60) + int(s)
+
+                    entry[k] = total_seconds
+
+            entry["time"] = entry["user"] + entry["sys"]
 
             # :-1 because there's a trailing comma
             info_dict = json.loads("{" + info[:-1] + "}")
@@ -182,6 +188,6 @@ if __name__ == "__main__":
     answer = raw_input("(b)atch or (a)nalyse? ")
 
     if answer == "b":
-        main()
+        batch()
     elif answer == "a":
         analyse()

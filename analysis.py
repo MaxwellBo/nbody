@@ -8,7 +8,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
-def main():
+from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 unused import
+
+def ms2():
     if len(sys.argv) not in [1 + 1, 1 + 2]:
         print("input [output]")
         exit(1)
@@ -58,5 +60,35 @@ def main():
         else:
             plt.show()
 
+def ms3():
+    if len(sys.argv) not in [1 + 1]:
+        print("input")
+
+    in_filename = sys.argv[1]
+
+    with open(in_filename, "r") as f:
+        data = json.loads(f.read())
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+
+        # For each set of style and range settings, plot n random points in the box
+        # defined by x in [23, 32], y in [0, 100], z in [zlow, zhigh].
+        # for c, m, zlow, zhigh in [('r', 'o', -50, -25), ('b', '^', -30, -5)]:
+
+        xs = [ i["tasks"] for i in data if i["numBodies"] == 1024 ]
+        ys = [ i["nodes"] for i in data if i ["numBodies"] == 1024 ] 
+        zs = [ i["time"] for i in data if i["numBodies"] == 1024 ]
+
+        ax.scatter(xs, ys, zs, c="r", marker="o")
+
+        ax.set_xlabel('Tasks')
+        ax.set_ylabel('Nodes')
+        ax.set_zlabel('Time')
+
+        plt.show()
+
 if __name__ == "__main__":
-    main()
+    # ms2()
+    ms3()
+    
