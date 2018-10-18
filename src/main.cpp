@@ -246,7 +246,6 @@ int main(int argc, char **argv) {
     }
 
     // ---------------------------------------------------------------------//
-
     int size;
     int rank;
     MPI_Comm comm = MPI_COMM_WORLD;
@@ -319,9 +318,6 @@ int main(int argc, char **argv) {
         dump_meta_info(num_time_steps, output_interval, timestep, bodies);
         dump_masses(bodies);
         dump_timestep(t, bodies);
-
-        fprintf(stderr, "Barnes-Hut enabled: %s\n", ENABLE_BARNES_HUT ? "true" : "false");
-        fprintf(stderr, "OMP Max threads: %d\n", omp_get_max_threads());
     }
 
     // ---------------------------------------------------------------------//

@@ -1,7 +1,7 @@
 from __future__ import print_function
 from itertools import product
 
-BODIES = [16, 64, 256, 1024, 4096]
+BODIES = [4, 16, 64, 256, 1024, 4096]
 NODES = [1, 4, 8, 12]
 TASKS = [1, 4, 8, 12]
 CPUS_PER_TASK = [1, 8, 24]
@@ -9,13 +9,13 @@ ENABLE_BARNES_HUT = [True, False]
 
 BATCH_ARGS = """#!/bin/bash
 #SBATCH --partition=cosc
-#SBATCH --job-name=mbody
+#SBATCH --job-name={name}
 #SBATCH --nodes={nodes}
 #SBATCH --ntasks={ntasks}
 #SBATCH --cpus-per-task={cpus_per_task}
-#SBATCH --error=batcherr/{name}.log
-#SBATCH --output=batchout/{name}.out
-#SBATCH --time=0:10:00
+#SBATCH --error=./batcherr/{name}.log
+#SBATCH --output=./batchout/{name}.out
+#SBATCH --time=0:05:00
 """
 
 LOGGING = """DATE=$(date +"%Y%m%d%H%M")
@@ -114,7 +114,7 @@ def main():
             enable_barnes_hut=enable_barnes_hut
         )
 
-        with open("batches/" + name, "w+") as f:
+        with open("batches/{name}.sh".format(name=name), "w+") as f:
             f.write(batch)
 
 if __name__ == "__main__":
