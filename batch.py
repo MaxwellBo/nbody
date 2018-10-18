@@ -139,33 +139,39 @@ def analyse():
             enable_barnes_hut=enable_barnes_hut
         )
 
+        print("Parsing {name}".format(name=name))
+
         entry = {
-            name: name
-            bodies: bodies,
-            nodes: nodes,
-            tasks: tasks,
-            cpusPerTask: cpus_per_task,
-            enable_barnes_hut: enable_barnes_hut
+            "name": name,
+            "bodies": bodies,
+            "nodes": nodes,
+            "tasks": tasks,
+            "cpusPerTask": cpus_per_task,
+            "enable_barnes_hut": enable_barnes_hut
         }
 
-        with open("./batchout/{name}.out".format(name=name), "w+") as o:
+        with open("./batchout/{name}.out".format(name=name)) as o:
             text = o.read()
 
-            slurm_details, body = text.split("----------------")
+            slurm_details = text.split("----------------")[0]
 
-            for line in slurm_details.split('\n')
-                k, v = line.split('=')
-                entry[k] = v
+            for line in slurm_details.split('\n'):
+                if line != "":
+                    k, v = line.split('=')
+                    entry[k] = v
+
 
         with open("./batcherr/{name}.log".format(name=name)) as e:
             text = e.read()
             info, time = text.split('\n\n')
 
             for line in time.split('\n'):
-                k, v = split()
-                entry[k] = v
+                if line != "":
+                    k, v = line.split()
+                    entry[k] = v
 
-            info_dict = json.loads("{" + info + "}")
+            # :-1 because there's a trailing comma
+            info_dict = json.loads("{" + info[:-1] + "}")
 
             data.append(merge_two_dicts(entry, info_dict))
 
@@ -173,4 +179,9 @@ def analyse():
         f.write(json.dumps(data))
 
 if __name__ == "__main__":
-    main()
+    answer = raw_input("(b)atch or (a)nalyse? ")
+
+    if answer == "b":
+        main()
+    elif answer == "a":
+        analyse()
