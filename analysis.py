@@ -61,6 +61,23 @@ def ms2():
             plt.show()
 
 def ms3():
+    BODIES = [4, 16, 64, 256, 1024, 4096]
+
+    cpus_per_task = {
+        "label": "CPUs per task",
+        "field": "cpusPerTask"
+    }
+
+    nodes = {
+        "label": "nodes",
+        "field": "nodes"
+    }
+
+    tasks_per_cpu = {
+        "label": "tasks per node",
+        "field": "tasksPerNode"
+    }
+
     if len(sys.argv) not in [1 + 1]:
         print("input")
 
@@ -68,44 +85,39 @@ def ms3():
 
     with open(in_filename, "r") as f:
         data = json.loads(f.read())
+        valid_data = [ i for i in data if "time" in i ]
 
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
+        for bodies in BODIES:
+            for (x, y) in [
+                (cpus_per_task, nodes),
+                (cpus_per_task, tasks_per_cpu),
+                (nodes, tasks_per_cpu)
+            ]:
+                display_figure(bodies=bodies, data=[i for i in valid_data if i["bodies"] == bodies ], x=x, y=y)
 
-        bodies = 1024
 
-        valid_data = [ i for i in data if "time" in i and i["bodies"] == bodies ]
 
-        x = {
-            "label": "CPUs per task",
-            "field": "cpusPerTask"
-        }
+def display_figure(bodies, data, x, y):
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
 
-        y = {
-            "label": "nodes",
-            "field": "nodes"
-        }
+    for c, m, d, label in [
+        ('b', 'o', [ i for i in data if not i["enable_barnes_hut"]], "No Barnes-Hut"), 
+        ('r', '^', [ i for i in data if i["enable_barnes_hut"]], "Barnes-Hut")
+    ]:
+        xs = [ i[x["field"]] for i in d ]
+        ys = [ i[y["field"]] for i in d ]
+        zs = [ i["time"] for i in d ]
+        ax.scatter(xs, ys, zs, c=c, marker=m, label=label)
 
-        for c, m, data, label in [
-            ('b', 'o', [ i for i in valid_data if not i["enable_barnes_hut"]], "No Barnes-Hut"), 
-            ('r', '^', [ i for i in valid_data if i["enable_barnes_hut"]], "Barnes-Hut")
-        ]:
-            xs = [ i[x["field"]] for i in data ]
-            ys = [ i[y["field"]] for i in data ]
-            zs = [ i["time"] for i in data ]
-            ax.scatter(xs, ys, zs, c=c, marker=m, label=label)
+    ax.set_title("{bodies} bodies".format(bodies=bodies))
+    ax.set_xlabel('{label} (n)'.format(label=x["label"]))
+    ax.set_ylabel('{label} (n)'.format(label=y["label"]))
+    ax.set_zlabel('user + sys time (s)')
 
-        ax.set_title("{bodies} bodies, 10 timesteps".format(bodies=bodies))
-        ax.set_xlabel('{label} (n)'.format(label=x["label"]))
-        ax.set_ylabel('{label} (n)'.format(label=y["label"]))
-        ax.set_zlabel('user + sys time (s)')
+    ax.legend()
 
-        print()
-
-        ax.legend()
-
-        plt.savefig("reports/images/{bodies}-{xlabel}-{ylabel}".format(bodies=bodies, xlabel=x["field"], ylabel=y["field"]))
-        plt.show()
+    plt.savefig("reports/images/{bodies}-{xlabel}-{ylabel}".format(bodies=bodies, xlabel=x["field"], ylabel=y["field"]))
 
 if __name__ == "__main__":
     # ms2()
