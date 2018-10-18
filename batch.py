@@ -5,7 +5,8 @@ import json
 BODIES = [4, 16, 64, 256, 1024, 4096]
 NODES = [1, 4, 8, 12]
 TASKS = [1, 4, 8, 12]
-CPUS_PER_TASK = [1, 4, 16]
+TASKS_PER_NODE = [1, 4, 8]
+CPUS_PER_TASK = [1, 4, 8]
 ENABLE_BARNES_HUT = [True, False]
 
 BATCH_ARGS = """#!/bin/bash
@@ -13,6 +14,7 @@ BATCH_ARGS = """#!/bin/bash
 #SBATCH --job-name={name}
 #SBATCH --nodes={nodes}
 #SBATCH --ntasks={ntasks}
+#SBATCH --ntasks-per-node={tasks_per_node}
 #SBATCH --cpus-per-task={cpus_per_task}
 #SBATCH --error=./batcherr/{name}.log
 #SBATCH --output=./batchout/{name}.out
@@ -21,12 +23,15 @@ BATCH_ARGS = """#!/bin/bash
 
 LOGGING = """DATE=$(date +"%Y%m%d%H%M")
 export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}
+echo "DATE=$DATE"
 echo "SLURM_JOB_NAME=$SLURM_JOB_NAME"
 echo "SLURM_JOB_ID=$SLURM_JOB_ID"
+echo "SLURM_JOB_NUM_NODES=$SLURM_JOB_NUM_NODES"
 echo "SLURM_NODELIST=$SLURM_NODELIST"
-echo "DATE=$DATE"
-echo "OMP_NUM_THREADS=$OMP_NUM_THREADS"
+echo "SLURM_NTASKS=$SLURM_NTASKS"
 echo "SLURM_TASKS_PER_NODE=$SLURM_TASKS_PER_NODE"
+echo "SLURM_CPUS_PER_TASK=$SLURM_CPUS_PER_TASK"
+echo "OMP_NUM_THREADS=$OMP_NUM_THREADS"
 echo '----------------'
 """
 
@@ -74,13 +79,15 @@ def make_batch(
     bodies,
     nodes,
     tasks,
+    tasks_per_node,
     cpus_per_task,
     enable_barnes_hut
 ):
-    name = "mbody-b{bodies}-n{nodes}-t{tasks}-cpt{cpus_per_task}".format(
+    name = "mbody-b{bodies}-n{nodes}-t{tasks}-tpn{tasks_per_node}-cpt{cpus_per_task}".format(
         bodies=bodies,
         nodes=nodes,
         tasks=tasks,
+        tasks_per_node=task_per_node,
         cpus_per_task=cpus_per_task
     )
 
@@ -92,6 +99,7 @@ def make_batch(
     batch_args = BATCH_ARGS.format(
         nodes=nodes,
         ntasks=tasks,
+        tasks_per_node=task_per_node,
         cpus_per_task=cpus_per_task,
         name=name
     )
@@ -110,15 +118,19 @@ def batch():
     for n in BODIES:
         generate_inputs(n)
 
-    for (bodies, nodes, tasks, cpus_per_task, enable_barnes_hut)\
-    in product(BODIES, NODES, TASKS, CPUS_PER_TASK, ENABLE_BARNES_HUT):
-        if tasks < nodes:
+    for (bodies, nodes, tasks, tasks_per_node, cpus_per_task, enable_barnes_hut)\
+    in product(BODIES, NODES, TASKS, TASKS_PER_NODE, CPUS_PER_TASK, ENABLE_BARNES_HUT):
+        if cpus_per_task * tasks_per_node > 24:
+            continue
+
+        if (tasks_per_node * nodes) != tasks:
             continue
 
         name, batch = make_batch(
             bodies=bodies,
             nodes=nodes,
             tasks=tasks,
+            tasks_per_node=task_per_node,
             cpus_per_task=cpus_per_task,
             enable_barnes_hut=enable_barnes_hut
         )
@@ -129,15 +141,19 @@ def batch():
 def analyse():
     data = []
 
-    for (bodies, nodes, tasks, cpus_per_task, enable_barnes_hut)\
-    in product(BODIES, NODES, TASKS, CPUS_PER_TASK, ENABLE_BARNES_HUT):
-        if tasks < nodes:
+    for (bodies, nodes, tasks, tasks_per_node, cpus_per_task, enable_barnes_hut)\
+    in product(BODIES, NODES, TASKS, TASKS_PER_NODE, CPUS_PER_TASK, ENABLE_BARNES_HUT):
+        if (tasks_per_node * nodes) != tasks:
+            continue
+
+        if cpus_per_task * tasks_per_node > 24:
             continue
 
         name, batch = make_batch(
             bodies=bodies,
             nodes=nodes,
             tasks=tasks,
+            tasks_per_node=task_per_node,
             cpus_per_task=cpus_per_task,
             enable_barnes_hut=enable_barnes_hut
         )
@@ -147,6 +163,7 @@ def analyse():
             "bodies": bodies,
             "nodes": nodes,
             "tasks": tasks,
+            "tasksPerNode": tasks_per_node,
             "cpusPerTask": cpus_per_task,
             "enable_barnes_hut": enable_barnes_hut
         }
