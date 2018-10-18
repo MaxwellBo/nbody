@@ -140,7 +140,7 @@ def analyse():
         name, batch = make_batch(
             bodies=bodies,
             nodes=nodes,
-            tasks_per_node=task_per_node,
+            tasks_per_node=tasks_per_node,
             cpus_per_task=cpus_per_task,
             enable_barnes_hut=enable_barnes_hut
         )
@@ -164,8 +164,8 @@ def analyse():
                     if line != "":
                         k, v = line.split('=')
                         entry[k] = v
-        except:
-            print("Failed to parse ./batchout/{name}.out".format(name=name))
+        except Exception as err:
+            print("Failed ./batcherr/{name}.log with {err}".format(name=name, err=err))
             pass
 
         try:
@@ -177,21 +177,21 @@ def analyse():
                     if line != "":
                         k, v = line.split()
                         entry[k] = v
-
                         m, s = v[:-1].split('m')
-                        total_seconds = (int(m) * 60) + int(s)
-
+                        total_seconds = (float(m) * 60) + float(s)
                         entry[k] = total_seconds
-                        entry["time"] = entry["user"] + entry["sys"]
 
-                    # :-1 because there's a trailing comma
-                    info_dict = json.loads("{" + info[:-1] + "}")
+                entry["time"] = entry["user"] + entry["sys"]
+                # :-1 because there's a trailing comma
+
+                info_dict = json.loads("{" + info[:-1] + "}")
 
                 data.append(merge_two_dicts(entry, info_dict))
+
                 print("Success with {name}".format(name=name))
                 continue
-        except:
-            print("Failed to parse ./batcherr/{name}.log".format(name=name))
+        except Exception as err:
+            print("Failed ./batcherr/{name}.log with {err}".format(name=name, err=err))
             data.append(entry)
             continue
 
