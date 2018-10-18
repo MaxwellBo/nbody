@@ -300,7 +300,7 @@ Looking at our high-level implementation, the following two steps consume the va
 The \textit{Leapfrog} step is the easiest step to distribute amongst many nodes, as it does not require the comparison of a body to all other bodies - each node can compute the step on a subset of all bodies, and later combine each subset with relatively simple MPI code.
 
 This can be achieved with \texttt{MPI\_Scatterv} and \texttt{MPI\_Gatherv}
-\footnote{These \texttt{v} variants support custom chunking sizes e.g. if we have 15 bodies we can send $4, 4, 4, 3$ bodies to each node respectively, which \texttt{MPI\_Scatter} and \texttt{MPI\_Gather} do not support dynamic chunking}. We decompose each dimension of our \texttt{Body}s into arrays, (e.g. the $x$ position, the $x$ veolocity, etc.), \texttt{MPI\_Scatterv} these arrays, recompose them into \texttt{Body}s, run \texttt{Leapfrog} on this subset on each node, decompose the subset into arrays, \texttt{MPI\_Gatherv} these arrays back to the root node, and recompose them into $\texttt{Bodys}$.
+\footnote{These \texttt{v} variants support custom chunking sizes e.g. if we have 15 bodies we can send $4, 4, 4, 3$ bodies to each node respectively, which \texttt{MPI\_Scatter} and \texttt{MPI\_Gather} do not support dynamic chunking}. We decompose each dimension of our \texttt{Body}s into arrays, (e.g. the $x$ position, the $x$ veolocity, etc.), \texttt{MPI\_Scatterv} these arrays, recompose them into \texttt{Body}s, run \texttt{Leapfrog} on this subset on each node, decompose the subset into arrays, \texttt{MPI\_Gatherv} these arrays back to the root node, and recompose them into \texttt{Body}s.
 
 \includegraphics[width=7cm]{mpi_scatter}
 \includegraphics[width=7cm]{mpi_gather}
@@ -360,7 +360,38 @@ We have mulitple dimensions that we can change to measure the scalability of the
 
 Running tests with all valid combinations of these variables, with a \texttt{numTimeSteps} as low as 8, would produce useful data, across multiple dimension, with minimal load on cluster. It would be unlikely that this plan would be curtailed.
 
-\medskip
+\section*{Testing}
+
+\subsection*{Changes since MS2}
+
+In MS2, we decomposed each dimension of our \texttt{Body}s into arrays, (e.g. the $x$ position, the $x$ veolocity, etc.), \texttt{MPI\_Scatterv}ed these arrays, recomposed them into \texttt{Body}s, ran \texttt{Leapfrog} on this subset on each node, decomposed the subset into arrays, \texttt{MPI\_Gatherv}ed these arrays back to the root node, and recomposed them into \texttt{Body}s. We were also allocating a fresh new \texttt{Vector} after \texttt{Body} recomposition. This was, frankly, insane, and took a program with very low memory usage and pressure in the serial implementation to one that constantly allocated and deallocated memory on every single step.
+
+By declaring \texttt{MPI\_Datatype MPI\_Body} with \texttt{MPI\_Type\_contiguous(8, MPI\_DOUBLE, \&MPI\_Body)}, we're now able to send and receive subsets of \texttt{Body}s with just a single \texttt{MPI\_Scatterv} and \texttt{MPI\_Gatherv} call. We also \texttt{MPI\_Scatterv} and \texttt{MPI\_Gatherv} directly into \texttt{Vector}s allocated at the start of the program, without intermediate array allocations. This eliminated transient out-of-memory errors, and likely reduced MPI overhead.
+
+
+\subsection*{Testing Performed}
+
+
+\begin{enumerate}
+    \item The number of bodies ($n$) (\texttt{4, 16, 64, 256, 1024, 4096})
+    \item \texttt{--nodes} (\texttt{1, 4, 8, 12})
+    \item \texttt{--ntasks} (\texttt{1, 4, 8, 12})
+    \item \texttt{--cpus-per-task} (\texttt{1, 4, 16})
+    \item \texttt{ENABLE\_BARNES\_HUT} (\texttt{true, false})
+\end{enumerate}
+
+All valid combinations\footnote{As an example, \texttt{TASKS = 1, NODES=12} is not an admissable configuration} of the values in the lists above were performed. Tweaks in the number of bodies (a step from 4 to 16 bodies is double the body density; tests with 16384 bodies did not terminate), the number of nodes (\texttt{dogmatix} only has 12 nodes in the \texttt{cosc} partition; it did not make sense to disable MPI), the number of tasks (it made sense allocate the same number of tasks and nodes)
+
+
+% The testing actually performed [Do not rewrite your previous section to match this]. Comment on any differences between your test plan and what you actually executed. Give your results.
+    Analyse your results. Does your implementation scale? 
+    Summarise your findings for the semester (eg what worked and what didn't) including any limitations you expect scaling up your implementation to solving truely massive problem instances.
+
+Marking criteria: /20
+  Code compiles out of repo /2
+  Testing description       /8
+  Analysis                  /6
+  Summarise findings        /4
 
 \bibliographystyle{ieeetr}
 \bibliography{bib}

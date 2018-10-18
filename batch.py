@@ -5,7 +5,7 @@ import json
 BODIES = [4, 16, 64, 256, 1024, 4096]
 NODES = [1, 4, 8, 12]
 TASKS = [1, 4, 8, 12]
-CPUS_PER_TASK = [1, 8, 24]
+CPUS_PER_TASK = [1, 4, 16]
 ENABLE_BARNES_HUT = [True, False]
 
 BATCH_ARGS = """#!/bin/bash
@@ -128,6 +128,9 @@ def analyse():
 
     for (bodies, nodes, tasks, cpus_per_task, enable_barnes_hut)\
     in product(BODIES, NODES, TASKS, CPUS_PER_TASK, ENABLE_BARNES_HUT):
+        if tasks < nodes:
+            continue
+
         name, batch = make_batch(
             bodies=bodies,
             nodes=nodes,
