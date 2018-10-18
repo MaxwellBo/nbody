@@ -124,9 +124,7 @@ def main():
             f.write(batch)
 
 def analyse():
-    data = {
-        name: name
-    }
+    data = []
 
     for (bodies, nodes, tasks, cpus_per_task, enable_barnes_hut)\
     in product(BODIES, NODES, TASKS, CPUS_PER_TASK, ENABLE_BARNES_HUT):
@@ -138,6 +136,14 @@ def analyse():
             enable_barnes_hut=enable_barnes_hut
         )
 
+        entry = {
+            name: name
+            bodies: bodies,
+            nodes: nodes,
+            tasks: tasks,
+            cpusPerTask: cpus_per_task,
+            enable_barnes_hut: enable_barnes_hut
+        }
 
         with open("./batchout/{name}.out".format(name=name), "w+") as o:
             text = o.read()
@@ -146,23 +152,22 @@ def analyse():
 
             for line in slurm_details.split('\n')
                 k, v = line.split('=')
-
-                data[k] = v
+                entry[k] = v
 
         with open("./batcherr/{name}.log".format(name=name)) as e:
             text = e.read()
             info, time = text.split('\n\n')
+
+            for line in time.split('\n'):
+                k, v = split()
+                entry[k] = v
+
             info_dict = json.loads("{" + info + "}")
 
+            data.append(merge_two_dicts(entry, info_dict))
 
-            _, info_dict["real"] = time.split('\n')[0].split()
-            _, info_dict["user"] = time.split('\n')[1].split()
-            _, info_dict["sys"] = time.split('\n')[1].split()
-
-            data = merge_two_dicts(data, info_dict)
-
-        with open("data.json", "w+") as f:
-            f.write(batch)
+    with open("data.json", "w+") as f:
+        f.write(json.dumps(data))
 
 if __name__ == "__main__":
     main()
