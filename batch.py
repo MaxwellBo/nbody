@@ -30,7 +30,7 @@ echo '----------------'
 """
 
 # numTimeSteps outputInterval deltaT inputFile
-INVOCATION = "time mpirun -n ${{SLURM_NPROCS}} ./nbody {numTimeSteps} {outputInterval} {deltaT} {inputFile}"
+INVOCATION = "time mpirun -n ${{SLURM_NPROCS}} ./nbody {numTimeSteps} {outputInterval} {deltaT} {inputFile} {enableBarnesHut}"
 
 num_time_steps = 10
 time = 10
@@ -94,7 +94,8 @@ def make_batch(
         numTimeSteps=num_time_steps,
         outputInterval=output_interval,
         deltaT=delta_t,
-        inputFile=input_file
+        inputFile=input_file,
+        enableBarnesHut=(1 if enable_barnes_hut else 0)
     )
 
     return name, batch_args + LOGGING + invocation

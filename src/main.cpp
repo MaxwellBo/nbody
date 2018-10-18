@@ -19,7 +19,6 @@ MPI_Datatype MPI_Body;
 const unsigned int LEAP = 0;
 const unsigned int FROG = 1;
 
-const bool ENABLE_BARNES_HUT = false;
 const bool ENABLE_LEAPFROG = true;
 const bool ENABLE_LOGGING = false;
 
@@ -241,8 +240,8 @@ std::vector<Body> parse_input_file(std::ifstream& input_fh) {
 }
 
 int main(int argc, char **argv) {
-    if (argc != 5) {
-        fprintf(stdout, "numTimeSteps outputInterval deltaT inputFile\n");
+    if (argc != 6) {
+        fprintf(stdout, "numTimeSteps outputInterval deltaT inputFile enableBarnesHut\n");
         exit(1);
     }
 
@@ -270,6 +269,8 @@ int main(int argc, char **argv) {
 
     const std::string &input_filename = argv[4];
 
+    const bool ENABLE_BARNES_HUT = std::stod(argv[5]) != 0; // big thonk
+
     std::ifstream input_fh(input_filename);
 
     std::vector<Body> bodies = parse_input_file(input_fh);
@@ -293,19 +294,19 @@ int main(int argc, char **argv) {
     displacements.push_back(displacement_acc);
     send_counts.push_back(remainder);
 
-    fprintf(stderr, "Displacements\n");
-    for (size_t i = 0; i < displacements.size(); i++) {
-        fprintf(stderr, "%d ", displacements[i]);
-
-    }
-    fprintf(stderr, "\n");
-
-    fprintf(stderr, "Send counts\n");
-    for (size_t i = 0; i < send_counts.size(); i++) {
-        fprintf(stderr, "%d ", send_counts[i]);
-
-    }
-    fprintf(stderr, "\n");
+    // fprintf(stderr, "Displacements\n");
+    // for (size_t i = 0; i < displacements.size(); i++) {
+    //     fprintf(stderr, "%d ", displacements[i]);
+    //
+    // }
+    // fprintf(stderr, "\n");
+    //
+    // fprintf(stderr, "Send counts\n");
+    // for (size_t i = 0; i < send_counts.size(); i++) {
+    //     fprintf(stderr, "%d ", send_counts[i]);
+    //
+    // }
+    // fprintf(stderr, "\n");
 
     std::vector<Body> sbodies(send_counts[rank]);
 
@@ -409,26 +410,22 @@ int main(int argc, char **argv) {
 
     const double cpu_time_elapsed = cpu_time() - start;
 
-    fprintf(stderr, "Total CPU time on rank %d was %lf\n", rank, cpu_time_elapsed);
+    fprintf(stderr, "%d: %lf,\n", rank, cpu_time_elapsed);
 
     // ---------------------------------------------------------------------//
 
-    if (ENABLE_LOGGING && rank == 0) {
-        FILE *log_fh = fopen("nbody.log", "a");
+    if (rank == 0) {
+        fprintf(stderr, "numTimeSteps: %d,\n", num_time_steps);
+        fprintf(stderr, "outputInterval: %d,\n", output_interval);
+        fprintf(stderr, "deltaT: %lf,\n", timestep);
+        fprintf(stderr, "inputFile: %s,\n", input_filename.c_str());
 
-        fprintf(
-            log_fh,
-            ",\n{ 'numTimeSteps': %d, 'inputFile': '%s', 'numBodies': %d, 'time': %lf, 'barnesHut': %s, 'precomputedGm': true, 'ompMaxThreads': %d, 'mpi': %d }",
-            num_time_steps,
-            input_filename.c_str(),
-            static_cast<int>(bodies.size()), // thank-you Joel
-            cpu_time_elapsed,
-            ENABLE_BARNES_HUT ? "true" : "false",
-            omp_get_max_threads(),
-            size
-        );
+        fprintf(stderr, "enableBarnesHut: %d,\n", ENABLE_BARNES_HUT);
 
-        fclose(log_fh);
+        fprintf(stderr, "numBodies: %d,\n", static_cast<int>(bodies.size()));
+
+        fprintf(stderr, "ompMaxThreads: %d,\n", omp_get_max_threads());
+        fprintf(stderr, "mpiCommSize: %d,\n", size);
     }
     
     return 0;
