@@ -371,7 +371,6 @@ By declaring \texttt{MPI\_Datatype MPI\_Body} with \texttt{MPI\_Type\_contiguous
 
 \subsection*{Testing Performed}
 
-
 \begin{enumerate}
     \item The number of bodies ($n$) (\texttt{4, 16, 64, 256, 1024, 4096})
     \item \texttt{--nodes} (\texttt{1, 4, 8, 12})
@@ -380,12 +379,15 @@ By declaring \texttt{MPI\_Datatype MPI\_Body} with \texttt{MPI\_Type\_contiguous
     \item \texttt{ENABLE\_BARNES\_HUT} (\texttt{true, false})
 \end{enumerate}
 
-All valid combinations\footnote{As an example, \texttt{TASKS = 1, NODES=12} is not an admissable configuration} of the values in the lists above were performed. Tweaks in the number of bodies (a step from 4 to 16 bodies is double the body density; tests with 16384 bodies did not terminate), the number of nodes (\texttt{dogmatix} only has 12 nodes in the \texttt{cosc} partition; it did not make sense to disable MPI), the number of tasks (it made sense allocate the same number of tasks and nodes)
-
-
 % The testing actually performed [Do not rewrite your previous section to match this]. Comment on any differences between your test plan and what you actually executed. Give your results.
-    Analyse your results. Does your implementation scale? 
-    Summarise your findings for the semester (eg what worked and what didn't) including any limitations you expect scaling up your implementation to solving truely massive problem instances.
+All valid combinations\footnote{As an example, \texttt{TASKS = 1, NODES=12} is not an admissable configuration, as the number of tasks must be greater than the number of nodes} of the values in the lists above were performed. Tweaks in the number of bodies ($n$) (a step from 4 to 16 bodies is double the body density; tests with 16384 bodies did not terminate), \texttt{--nodes} (\texttt{dogmatix} only has 12 nodes in the \texttt{cosc} partition; it did not make sense to disable MPI) and \texttt{--ntasks} (it made sense allocate the same number of tasks and nodes) were made. \texttt{--ntasks-per-node} was removed as a tested variable, as it is dynamically set by Slurm. The OMP scheduling policy was unable to be set by program argument, and would have require three seperate binaries compiled with different options - thus, this was also removed as a tested variable.
+
+
+% Analyse your results. Does your implementation scale? 
+\subsection*{Scaling}
+
+% Summarise your findings for the semester (eg what worked and what didn't) including any limitations you expect scaling up your implementation to solving truely massive problem instances.
+\subsection*{Summary of Findings}
 
 Marking criteria: /20
   Code compiles out of repo /2
