@@ -117,7 +117,10 @@ def display_figure(bodies, data, x, y):
 
     ax.legend()
 
-    plt.savefig("reports/images/{bodies}-{xlabel}-{ylabel}".format(bodies=bodies, xlabel=x["field"], ylabel=y["field"]))
+    name = "{bodies}-{xlabel}-{ylabel}".format(bodies=bodies, xlabel=x["field"], ylabel=y["field"])
+
+    print("\includegraphics[width=2.2cm]{" + name + "}")
+    plt.savefig("reports/images/" + name)
 
 if __name__ == "__main__":
     # ms2()

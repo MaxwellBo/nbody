@@ -373,21 +373,57 @@ By declaring \texttt{MPI\_Datatype MPI\_Body} with \texttt{MPI\_Type\_contiguous
 
 \begin{enumerate}
     \item The number of bodies ($n$) (\texttt{4, 16, 64, 256, 1024, 4096})
-    \item \texttt{--nodes} (\texttt{1, 4, 8, 12})
-    \item \texttt{--ntasks} (\texttt{1, 4, 8, 12})
-    \item \texttt{--cpus-per-task} (\texttt{1, 4, 16})
+    \item \texttt{--nodes} (\texttt{1, 2, 4, 8, 12})
+    \item \texttt{--ntasks-per-node} (\texttt{1, 2, 4, 8})
+    \item \texttt{--cpus-per-task} (\texttt{1, 2, 4, 8})
     \item \texttt{ENABLE\_BARNES\_HUT} (\texttt{true, false})
 \end{enumerate}
 
 % The testing actually performed [Do not rewrite your previous section to match this]. Comment on any differences between your test plan and what you actually executed. Give your results.
-All valid combinations\footnote{As an example, \texttt{TASKS = 1, NODES=12} is not an admissable configuration, as the number of tasks must be greater than the number of nodes} of the values in the lists above were performed. Tweaks in the number of bodies ($n$) (a step from 4 to 16 bodies is double the body density; tests with 16384 bodies did not terminate), \texttt{--nodes} (\texttt{dogmatix} only has 12 nodes in the \texttt{cosc} partition; it did not make sense to disable MPI) and \texttt{--ntasks} (it made sense allocate the same number of tasks and nodes) were made. \texttt{--ntasks-per-node} was removed as a tested variable, as it is dynamically set by Slurm. The OMP scheduling policy was unable to be set by program argument, and would have require three seperate binaries compiled with different options - thus, this was also removed as a tested variable.
+All valid combinations\footnote{As an example, \texttt{--ntasks-per-node=8, cpus-per-task=8} is not an admissable configuration, as this would require 64 CPUs on a single node. \texttt{dogmatix} only has nodes with 24 or 28 CPUs} of the values in the lists above were performed. Tweaks in the number of bodies ($n$) (a step from 4 to 16 bodies is double the body density; tests with 16384 bodies did not terminate), \texttt{--nodes} (\texttt{dogmatix} only has 12 nodes in the \texttt{cosc} partition; it did not make sense to disable MPI) and not setting \texttt{--ntasks} parameter (it made sense to allow Slurm to dynamically allocate the required number of tasks based on our \texttt{--ntasks-per-node} and \texttt{--cpus-per-task} parameters) and adding the \texttt{--ntasks-per-node} parameter. Further granuality in the \texttt{--cpus-per-task} parameter was also introduced.
+
+The OMP scheduling policy was unable to be set by program argument, and would have require three seperate binaries compiled with different options - thus, this was also removed as a tested variable.
 
 
 % Analyse your results. Does your implementation scale? 
 \subsection*{Scaling}
 
+We measure time with a combination of the \texttt{sys} and \texttt{user} times reported by the \texttt{time} core util. 
+
+
+We can see a few trends emerge
+
+
+\begin{itemize}
+    \item \texttt{--ntasks-per-node=\{tasks\_per\_node\}} causes time to be an order of magnitude higher, across
+
+\end{itemize}
+- Simulations with Barnes-Hut enables have  lrunning times are smaller than their Barnes-Hut disabled counterparts, except on when TODO
+
+\includegraphics[width=2.2cm]{4-cpusPerTask-nodes}
+\includegraphics[width=2.2cm]{4-cpusPerTask-tasksPerNode}
+\includegraphics[width=2.2cm]{4-nodes-tasksPerNode}
+\includegraphics[width=2.2cm]{16-cpusPerTask-nodes}
+\includegraphics[width=2.2cm]{16-cpusPerTask-tasksPerNode}
+\includegraphics[width=2.2cm]{16-nodes-tasksPerNode}
+\includegraphics[width=2.2cm]{64-cpusPerTask-nodes}
+\includegraphics[width=2.2cm]{64-cpusPerTask-tasksPerNode}
+\includegraphics[width=2.2cm]{64-nodes-tasksPerNode}
+\includegraphics[width=2.2cm]{256-cpusPerTask-nodes}
+\includegraphics[width=2.2cm]{256-cpusPerTask-tasksPerNode}
+\includegraphics[width=2.2cm]{256-nodes-tasksPerNode}
+\includegraphics[width=2.2cm]{1024-cpusPerTask-nodes}
+\includegraphics[width=2.2cm]{1024-cpusPerTask-tasksPerNode}
+\includegraphics[width=2.2cm]{1024-nodes-tasksPerNode}
+\includegraphics[width=2.2cm]{4096-cpusPerTask-nodes}
+\includegraphics[width=2.2cm]{4096-cpusPerTask-tasksPerNode}
+\includegraphics[width=2.2cm]{4096-nodes-tasksPerNode}
+
+
 % Summarise your findings for the semester (eg what worked and what didn't) including any limitations you expect scaling up your implementation to solving truely massive problem instances.
 \subsection*{Summary of Findings}
+
+Efforts can be made to reduce the MPI overhead. Currently \texttt{Body}s are sent in their entirety, at every single simulation step. We do not have to send m and the precomputed \texttt{Gm} and \texttt{m}, as each node can recover this information from the input file. The `eap' step does not need \texttt{Body::Fx} and \texttt{Body::Fy}, and `frog' does not need \texttt{Body::x} and \texttt{Body::y}. Thus, we do not need to \texttt{MPI\_Scatterv} and \texttt{MPI\_Gatherv} this information in preparation for each step. This effectively halves the amount of data that would be sent by MPI. Efforts would need to be made to determine how much of the MPI overhead is due to a hard bandwidth limit on the interconnects between nodes. I hypothesise that MPI overhead scales linearly with data transferred, and that the MPI transmission protocol is responsible for the majority of the overhead at low data transfer quantities. 
 
 Marking criteria: /20
   Code compiles out of repo /2
