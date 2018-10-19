@@ -93,22 +93,27 @@ def ms3():
                 (cpus_per_task, tasks_per_cpu),
                 (nodes, tasks_per_cpu)
             ]:
-                for elide_8_tpn in [True, False]:
+                for fil in ["", "elide_8_tpn", "just_1_tpn"]:
                     display_figure(
                         bodies=bodies, 
                         data=[i for i in valid_data if i["bodies"] == bodies ], 
                         x=x, 
                         y=y,
-                        elide_8_tpn=elide_8_tpn
+                        fil=fil
                     )
 
-
-
-def display_figure(bodies, data, x, y, elide_8_tpn):
+def display_figure(bodies, data, x, y, fil):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
 
-    if elide_8_tpn:
+    extra=""
+
+    if fil == "elide_8_tpn":
+        extra = ", --ntasks-per-node=8 elided"
+        data = [ i for i in data if i["tasksPerNode"] != 8 ]
+
+    if fil == "just_1_tpn":
+        extra = ", --ntasks-per-node=1"
         data = [ i for i in data if i["tasksPerNode"] != 8 ]
 
     for c, m, d, label in [
@@ -120,9 +125,9 @@ def display_figure(bodies, data, x, y, elide_8_tpn):
         zs = [ i["time"] for i in d ]
         ax.scatter(xs, ys, zs, c=c, marker=m, label=label)
 
-    ax.set_title("{bodies} bodies{elide_8_tpn}".format(
-        bodies=bodies, 
-        elide_8_tpn=(", --ntasks-per-node=8 elided" if elide_8_tpn else "")
+    ax.set_title("{bodies} bodies{extra}".format(
+        bodies=bodies,
+        extra=extra
     ))
     ax.set_xlabel('{label} (n)'.format(label=x["label"]))
     ax.set_ylabel('{label} (n)'.format(label=y["label"]))
@@ -130,11 +135,11 @@ def display_figure(bodies, data, x, y, elide_8_tpn):
 
     ax.legend()
 
-    name = "{bodies}-{xlabel}-{ylabel}{elide_8_tpn}".format(
+    name = "{bodies}-{xlabel}-{ylabel}{extra}".format(
         bodies=bodies, 
         xlabel=x["field"], 
         ylabel=y["field"],
-        elide_8_tpn=("-n8tpn" if elide_8_tpn else "")
+        extra=("-{fil}".format(fil=fil) if fil else "")
     )
 
     print("\includegraphics[width=2.2cm]{" + name + "}")

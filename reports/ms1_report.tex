@@ -114,12 +114,10 @@ Henceforth, the use of the `recognizable' refers to eyeballing the output data, 
 The \textit{Barnes-Hut} algorithm appeared to be dominated by its constant factor.\ref{fig:performance} Generating input files with a high number of bodies that did not cause 'spontaneous combustion' (where bodies would fly away from each other in every direction), and unconstrained Quadtree growth (where bodies achieve escape velocity, rapidly expanding the size of the tree and causing a collapse in simulation accuracy) proved difficult. Further testing on \texttt{goliath} is needed to discover the $n$ that causes \textit{Barnes-Hut} to be more performant than the brute-force approach.
 
 Strangely, $n = 16$ with \textit{Barnes-Hut} enabled took longer than expected, when compared to $n \in \{ 4, 8, 12 \}$. Further investigation is required.
-\begin{figure}[b]
-\caption{Scaling characteristics}
-\centering
-\label{fig:performance}
-\includegraphics[width=\textwidth]{performance}
-\end{figure} 
+
+\begin{center}
+\includegraphics[width=0.75\textwidth]{performance}
+\end{center}
 
 The addition of the 
 \texttt{-march=native} compiler flag, which enables the use of all CPU specific instructions, provided no recognizable improvement in running time, but was left enabled in the instance that it improved performance on \texttt{goliath}.
@@ -406,6 +404,14 @@ The behaviour becomes less significant when increasing the number of CPUs per ta
 Furthermore, the behaviour is still pronounced at 4 bodies, and the resulting times at \texttt{--ntasks-per-node=8} do not appear to be a function of the number of bodies.
 
 \includegraphics[width=14.2cm]{4-cpusPerTask-tasksPerNode}
+
+Further evidence can be seen for this multiprocesing overhead hypothesis, where decreasing the total number of processes allocated to each CPU decreases time.
+
+\includegraphics[width=14.2cm]{1024-cpusPerTask-tasksPerNode-n8tpn}
+
+We can also see that \texttt{--ntasks-per-node=1} runs with consistently good performance. We'll drill into data where\texttt{--ntasks-per-node=1} and further analyse its scaling characteristics.
+
+
 
 
 
