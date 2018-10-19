@@ -282,7 +282,7 @@ for (size_t i = 0; i < bodies.size(); i++) {
 }
 \end{verbatim}
 
-that provided the sought after parallel speedup. This parallel speedup was found to be present at where $n$-bodies was high. Testing focussed primarily on $n > 5000$,\footnote{In MS1, I failed to test simulations with a large number of $n$, as I was focussed on testing the accuracy of the implementation, and generated input files would cause high numbers of collisions that made accuracy assessment difficult. Testing $n=10000$, we find a 10x speedup with by using a serial Barnes-Hut implementation (Avg. $1.12$s, as opposed to $9.87$s without Barnes-Hut). Barnes-Hut afforded a much simpler parallelization scheme, as each body could calculate its force against the quadtree concurrently, without locks} where force and integration calculation overhead dominated thread creation overhead. Parallel speedup vanished around the $n \approx 500$ mark.
+that provided the sought after parallel speedup. This parallel speedup was found to be present at where $n$-bodies was high. Testing focussed primarily on $n > 5000$,\footnote{In MS1, I failed to test simulations with a large number of $n$, as I was focussed on testing the accuracy of the implementation, and generated input files would cause high numbers of collisions that made accuracy assessment difficult. Testing $n=10000$, we find a 10x speedup with by using a serial \textit{Barnes-Hut} implementation (Avg. $1.12$s, as opposed to $9.87$s without \textit{Barnes-Hut}). \textit{Barnes-Hut} afforded a much simpler parallelization scheme, as each body could calculate its force against the quadtree concurrently, without locks} where force and integration calculation overhead dominated thread creation overhead. Parallel speedup vanished around the $n \approx 500$ mark.
 
 % Increasing \texttt{OMP_NUM_THREADS} beyond \texttt{4} failed to provide a speedup at $n = 10000$.
 
@@ -392,7 +392,7 @@ We measure time with a combination of the \texttt{sys} and \texttt{user} times r
 
 We can see a few trends emerge:
 
-\texttt{--ntasks-per-node=8} causes time to be above an order of magnitude higher, across all results. This behaviour is most pronounced when testing with 4096 bodies, across a variable number of nodes. We can also see the pronounced effect of Barnes-Hut ($O(n \log n)$) at 4096 bodies.
+\texttt{--ntasks-per-node=8} causes time to be above an order of magnitude higher, across all results. This behaviour is most pronounced when testing with 4096 bodies, across a variable number of nodes. We can also see the pronounced effect of \textit{Barnes-Hut} ($O(n \log n)$) at 4096 bodies.
 
 
 \includegraphics[width=14.2cm]{4096-nodes-tasksPerNode}
@@ -407,47 +407,42 @@ Furthermore, the behaviour is still pronounced at 4 bodies, and the resulting ti
 
 Further evidence can be seen for this multiprocesing overhead hypothesis, where decreasing the total number of processes allocated to each CPU decreases time.
 
-\includegraphics[width=14.2cm]{1024-cpusPerTask-tasksPerNode-n8tpn}
+\includegraphics[width=14.2cm]{1024-cpusPerTask-tasksPerNode-elide_8_tpn}
 
 We can also see that \texttt{--ntasks-per-node=1} runs with consistently good performance. We'll drill into data where\texttt{--ntasks-per-node=1} and further analyse its scaling characteristics.
 
+We see a large spike in running time when we move from 4 to 8 nodes when testing with 16 bodies. This is the only number of bodies that this behaviour is exhibited. I have no explanation for this behaviour.
 
+\includegraphics[width=14.2cm]{16-cpusPerTask-nodes-just_1_tpn}
 
+The spike occurs later for 64 bodies, instead at 12 nodes. 
 
+\includegraphics[width=14.2cm]{64-cpusPerTask-nodes-just_1_tpn}
 
+At 256 we see worse performance with 2 nodes and 1 CPU per task than with 4 nodes. This behaviour vanishes by 4096 bodies, and instead we see an adding more nodes increases the performance.
 
+\includegraphics[width=5.2cm]{256-cpusPerTask-nodes-just_1_tpn}\includegraphics[width=5.2cm]{1024-cpusPerTask-nodes-just_1_tpn}\includegraphics[width=5.2cm]{4096-cpusPerTask-nodes-just_1_tpn}
 
+Perhaps the only thing that provides a parallel speedup is dedicating more CPUs to each task.
 
-\includegraphics[width=2.2cm]{4-cpusPerTask-nodes}
-\includegraphics[width=2.2cm]{4-cpusPerTask-tasksPerNode}
-\includegraphics[width=2.2cm]{4-nodes-tasksPerNode}
-\includegraphics[width=2.2cm]{16-cpusPerTask-nodes}
-\includegraphics[width=2.2cm]{16-cpusPerTask-tasksPerNode}
-\includegraphics[width=2.2cm]{16-nodes-tasksPerNode}
-\includegraphics[width=2.2cm]{64-cpusPerTask-nodes}
-\includegraphics[width=2.2cm]{64-cpusPerTask-tasksPerNode}
-\includegraphics[width=2.2cm]{64-nodes-tasksPerNode}
-\includegraphics[width=2.2cm]{256-cpusPerTask-nodes}
-\includegraphics[width=2.2cm]{256-cpusPerTask-tasksPerNode}
-\includegraphics[width=2.2cm]{256-nodes-tasksPerNode}
-\includegraphics[width=2.2cm]{1024-cpusPerTask-nodes}
-\includegraphics[width=2.2cm]{1024-cpusPerTask-tasksPerNode}
-\includegraphics[width=2.2cm]{1024-nodes-tasksPerNode}
-\includegraphics[width=2.2cm]{4096-cpusPerTask-nodes}
-\includegraphics[width=2.2cm]{4096-cpusPerTask-tasksPerNode}
-\includegraphics[width=2.2cm]{4096-nodes-tasksPerNode}
-
+\includegraphics[width=14.2cm]{scaling}
 
 % Summarise your findings for the semester (eg what worked and what didn't) including any limitations you expect scaling up your implementation to solving truely massive problem instances.
 \subsection*{Summary of Findings}
 
-Efforts can be made to reduce the MPI overhead. Currently \texttt{Body}s are sent in their entirety, at every single simulation step. We do not have to send m and the precomputed \texttt{Gm} and \texttt{m}, as each node can recover this information from the input file. The `eap' step does not need \texttt{Body::Fx} and \texttt{Body::Fy}, and `frog' does not need \texttt{Body::x} and \texttt{Body::y}. Thus, we do not need to \texttt{MPI\_Scatterv} and \texttt{MPI\_Gatherv} this information in preparation for each step. This effectively halves the amount of data that would be sent by MPI. Efforts would need to be made to determine how much of the MPI overhead is due to a hard bandwidth limit on the interconnects between nodes. I hypothesise that MPI overhead scales linearly with data transferred, and that the MPI transmission protocol is responsible for the majority of the overhead at low data transfer quantities. 
+\subsubsection*{What Worked}
 
-Marking criteria: /20
-  Code compiles out of repo /2
-  Testing description       /8
-  Analysis                  /6
-  Summarise findings        /4
+\textit{Barnes-Hut} provided an effective reduction of complexity. Small micro-optimisations made with the assistance of a profiler provided decent performance improvements. \textit{Leapfrog} increased simulation accuracy. OpenMP provided a parallel speedup (after efforts were made to eliminate locking).
+
+\subsubsection*{What Didn't Work}
+
+ Apart from a few anomolies, adding more nodes degraded performance. Running multiple tasks on the same CPU further degraded performance. 
+
+ \subsubsection*{What Next}
+
+Efforts can be made to reduce the MPI overhead. Currently \texttt{Body}s are sent in their entirety, at every single simulation step. We do not have to send m and the precomputed \texttt{Gm} and \texttt{m}, as each node can recover this information from the input file. The `leap' step does not need \texttt{Body::Fx} and \texttt{Body::Fy}, and `frog' does not need \texttt{Body::x} and \texttt{Body::y}. Thus, we do not need to \texttt{MPI\_Scatterv} and \texttt{MPI\_Gatherv} this information in preparation for each step. This effectively halves the amount of data that would be sent by MPI. Efforts would need to be made to determine how much of the MPI overhead is due to a hard bandwidth limit on the interconnects between nodes. I hypothesise that MPI overhead scales linearly with data transferred, and that the MPI transmission protocol is responsible for the majority of the overhead at low data transfer quantities. 
+
+The \textit{Barnes-Hut} algorithm provides an effective means of compartmentalizing computations, eliminating the need to \texttt{MPI\_Gatherv} evetything back to the root node after each step. Each Quad of the \texttt{QuadTree} could be assigned to a seperate node; data would only be transferred between nodes when bodies stray over the boundry of a specific Quad. This would dramatically increase the complexity of the MPI messaging implementation.
 
 \bibliographystyle{ieeetr}
 \bibliography{bib}

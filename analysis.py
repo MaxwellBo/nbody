@@ -73,7 +73,7 @@ def ms3():
         "field": "nodes"
     }
 
-    tasks_per_cpu = {
+    tasks_per_node = {
         "label": "tasks per node",
         "field": "tasksPerNode"
     }
@@ -87,13 +87,29 @@ def ms3():
         data = json.loads(f.read())
         valid_data = [ i for i in data if "time" in i ]
 
+        display_2d_figure(
+            bodies=4096,
+            data=[i for i in valid_data if i["bodies"] == 4096 and i["nodes"] == 1 ],
+            x=cpus_per_task
+        )
+
         for bodies in BODIES:
-            for (x, y) in [
-                (cpus_per_task, nodes),
-                (cpus_per_task, tasks_per_cpu),
-                (nodes, tasks_per_cpu)
-            ]:
-                for fil in ["", "elide_8_tpn", "just_1_tpn"]:
+            for fil in ["", "elide_8_tpn", "just_1_tpn"]:
+                if fil == "just_1_tpn":
+                    display_figure(
+                        bodies=bodies, 
+                        data=[i for i in valid_data if i["bodies"] == bodies ], 
+                        x=cpus_per_task, 
+                        y=nodes,
+                        fil=fil
+                    )
+                    continue
+
+                for (x, y) in [
+                    (cpus_per_task, nodes),
+                    (cpus_per_task, tasks_per_node),
+                    (nodes, tasks_per_node)
+                ]:
                     display_figure(
                         bodies=bodies, 
                         data=[i for i in valid_data if i["bodies"] == bodies ], 
@@ -101,6 +117,33 @@ def ms3():
                         y=y,
                         fil=fil
                     )
+
+
+
+def display_2d_figure(bodies, data, x):
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    for c, m, d, label in [
+        ('b', 'o', [ i for i in data if not i["enable_barnes_hut"]], "No Barnes-Hut"), 
+        ('r', '^', [ i for i in data if i["enable_barnes_hut"]], "Barnes-Hut")
+    ]:
+        xs = [ i[x["field"]] for i in d ]
+        ys = [ i["time"] for i in d ]
+        ax.scatter(xs, ys, c=c, marker=m, label=label)
+
+    ax.set_title("{bodies} bodies, --ntasks-per-node=1, --nodes=1".format(
+        bodies=bodies
+    ))
+
+    ax.set_xlabel('{label} (n)'.format(label=x["label"]))
+    ax.set_ylabel('user + sys time (s)')
+    ax.legend()
+
+    name = "scaling"
+
+    print("\includegraphics[width=2.2cm]{" + name + "}")
+    plt.savefig("reports/images/" + name)
 
 def display_figure(bodies, data, x, y, fil):
     fig = plt.figure()
@@ -114,7 +157,7 @@ def display_figure(bodies, data, x, y, fil):
 
     if fil == "just_1_tpn":
         extra = ", --ntasks-per-node=1"
-        data = [ i for i in data if i["tasksPerNode"] != 8 ]
+        data = [ i for i in data if i["tasksPerNode"] == 8 ]
 
     for c, m, d, label in [
         ('b', 'o', [ i for i in data if not i["enable_barnes_hut"]], "No Barnes-Hut"), 
