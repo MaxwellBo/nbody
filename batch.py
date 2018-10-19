@@ -3,9 +3,9 @@ from itertools import product
 import json
 
 BODIES = [4, 16, 64, 256, 1024, 4096]
-NODES = [1, 4, 8, 12]
-TASKS_PER_NODE = [1, 4, 8]
-CPUS_PER_TASK = [1, 4, 8]
+NODES = [1, 2, 4, 8, 12]
+TASKS_PER_NODE = [1, 2, 4, 8]
+CPUS_PER_TASK = [1, 2, 4, 8]
 ENABLE_BARNES_HUT = [True, False]
 
 BATCH_ARGS = """#!/bin/bash
@@ -16,7 +16,7 @@ BATCH_ARGS = """#!/bin/bash
 #SBATCH --cpus-per-task={cpus_per_task}
 #SBATCH --error=./batcherr/{name}.log
 #SBATCH --output=./batchout/{name}.out
-#SBATCH --time=0:00:10
+#SBATCH --time=0:00:30
 """
 
 LOGGING = """DATE=$(date +"%Y%m%d%H%M")
