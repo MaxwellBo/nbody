@@ -129,7 +129,7 @@ def batch():
         with open("batches/{name}.sh".format(name=name), "w+") as f:
             f.write(batch)
 
-def analyse():
+def collate_data():
     data = []
 
     for (bodies, nodes, tasks_per_node, cpus_per_task, enable_barnes_hut)\
@@ -196,12 +196,13 @@ def analyse():
             continue
 
     with open("data.json", "w+") as f:
+        print("Dumping data to data.json")
         f.write(json.dumps(data))
 
 if __name__ == "__main__":
-    answer = raw_input("(b)atch or (a)nalyse? ")
+    answer = raw_input("(b)atch or (c)ollate data? ")
 
     if answer == "b":
         batch()
-    elif answer == "a":
-        analyse()
+    elif answer == "c":
+        collate_data()
