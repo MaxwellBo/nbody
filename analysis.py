@@ -93,13 +93,23 @@ def ms3():
                 (cpus_per_task, tasks_per_cpu),
                 (nodes, tasks_per_cpu)
             ]:
-                display_figure(bodies=bodies, data=[i for i in valid_data if i["bodies"] == bodies ], x=x, y=y)
+                for elide_8_tpn in [True, False]:
+                    display_figure(
+                        bodies=bodies, 
+                        data=[i for i in valid_data if i["bodies"] == bodies ], 
+                        x=x, 
+                        y=y,
+                        elide_8_tpn=elide_8_tpn
+                    )
 
 
 
-def display_figure(bodies, data, x, y):
+def display_figure(bodies, data, x, y, elide_8_tpn):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
+
+    if elide_8_tpn:
+        data = [ i for i in data if i["tasksPerNode"] != 8 ]
 
     for c, m, d, label in [
         ('b', 'o', [ i for i in data if not i["enable_barnes_hut"]], "No Barnes-Hut"), 
@@ -110,14 +120,22 @@ def display_figure(bodies, data, x, y):
         zs = [ i["time"] for i in d ]
         ax.scatter(xs, ys, zs, c=c, marker=m, label=label)
 
-    ax.set_title("{bodies} bodies".format(bodies=bodies))
+    ax.set_title("{bodies} bodies{elide_8_tpn}".format(
+        bodies=bodies, 
+        elide_8_tpn=(", --ntasks-per-node=8 elided" if elide_8_tpn else "")
+    ))
     ax.set_xlabel('{label} (n)'.format(label=x["label"]))
     ax.set_ylabel('{label} (n)'.format(label=y["label"]))
     ax.set_zlabel('user + sys time (s)')
 
     ax.legend()
 
-    name = "{bodies}-{xlabel}-{ylabel}".format(bodies=bodies, xlabel=x["field"], ylabel=y["field"])
+    name = "{bodies}-{xlabel}-{ylabel}{elide_8_tpn}".format(
+        bodies=bodies, 
+        xlabel=x["field"], 
+        ylabel=y["field"],
+        elide_8_tpn=("-n8tpn" if elide_8_tpn else "")
+    )
 
     print("\includegraphics[width=2.2cm]{" + name + "}")
     plt.savefig("reports/images/" + name)

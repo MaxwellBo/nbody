@@ -379,8 +379,10 @@ By declaring \texttt{MPI\_Datatype MPI\_Body} with \texttt{MPI\_Type\_contiguous
     \item \texttt{ENABLE\_BARNES\_HUT} (\texttt{true, false})
 \end{enumerate}
 
+We test with 10 \texttt{numTimeSteps}, to drown out the time dedicated to input parsing and upfront memory allocation (which is in the vicinity of 100ms). 
+
 % The testing actually performed [Do not rewrite your previous section to match this]. Comment on any differences between your test plan and what you actually executed. Give your results.
-All valid combinations\footnote{As an example, \texttt{--ntasks-per-node=8, cpus-per-task=8} is not an admissable configuration, as this would require 64 CPUs on a single node. \texttt{dogmatix} only has nodes with 24 or 28 CPUs} of the values in the lists above were performed. Tweaks in the number of bodies ($n$) (a step from 4 to 16 bodies is double the body density; tests with 16384 bodies did not terminate), \texttt{--nodes} (\texttt{dogmatix} only has 12 nodes in the \texttt{cosc} partition; it did not make sense to disable MPI) and not setting \texttt{--ntasks} parameter (it made sense to allow Slurm to dynamically allocate the required number of tasks based on our \texttt{--ntasks-per-node} and \texttt{--cpus-per-task} parameters) and adding the \texttt{--ntasks-per-node} parameter. Further granuality in the \texttt{--cpus-per-task} parameter was also introduced.
+All valid combinations\footnote{As an example, \texttt{--ntasks-per-node=8, cpus-per-task=8} is not an admissable configuration, as this would require 64 CPUs on a single node. \texttt{dogmatix} only has nodes with 24 or 28 CPUs} of the values in the lists above were performed. Tweaks in the number of bodies ($n$) (a step from 4 to 16 bodies is double the body density; tests with 16384 bodies did not terminate), \texttt{--nodes} (\texttt{dogmatix} only has 12 nodes in the \texttt{cosc} partition; it did not make sense to disable MPI), not setting \texttt{--ntasks} parameter (it made sense to allow Slurm to dynamically allocate the required number of tasks based on our \texttt{--ntasks-per-node} and \texttt{--cpus-per-task} parameters) and adding the \texttt{--ntasks-per-node} parameter were made since our MS2 plan. Further granuality in the \texttt{--cpus-per-task} parameter was also introduced.
 
 The OMP scheduling policy was unable to be set by program argument, and would have require three seperate binaries compiled with different options - thus, this was also removed as a tested variable.
 
@@ -388,17 +390,27 @@ The OMP scheduling policy was unable to be set by program argument, and would ha
 % Analyse your results. Does your implementation scale? 
 \subsection*{Scaling}
 
-We measure time with a combination of the \texttt{sys} and \texttt{user} times reported by the \texttt{time} core util. 
+We measure time with a combination of the \texttt{sys} and \texttt{user} times reported by the \texttt{time} coreutil. 
+
+We can see a few trends emerge:
+
+\texttt{--ntasks-per-node=8} causes time to be above an order of magnitude higher, across all results. This behaviour is most pronounced when testing with 4096 bodies, across a variable number of nodes. We can also see the pronounced effect of Barnes-Hut ($O(n \log n)$) at 4096 bodies.
 
 
-We can see a few trends emerge
+\includegraphics[width=14.2cm]{4096-nodes-tasksPerNode}
+
+The behaviour becomes less significant when increasing the number of CPUs per task, resulting in maximum CPU utilization per node. I hypothesize that process context switch overhead is causing this behaviour, as having a greater number of tasks allocated to a node than available CPUs causes the CPU (or CPUs) to multiprocess tasks. 
+
+\includegraphics[width=14.2cm]{4096-cpusPerTask-tasksPerNode}
+
+Furthermore, the behaviour is still pronounced at 4 bodies, and the resulting times at \texttt{--ntasks-per-node=8} do not appear to be a function of the number of bodies.
+
+\includegraphics[width=14.2cm]{4-cpusPerTask-tasksPerNode}
 
 
-\begin{itemize}
-    \item \texttt{--ntasks-per-node=\{tasks\_per\_node\}} causes time to be an order of magnitude higher, across
 
-\end{itemize}
-- Simulations with Barnes-Hut enables have  lrunning times are smaller than their Barnes-Hut disabled counterparts, except on when TODO
+
+
 
 \includegraphics[width=2.2cm]{4-cpusPerTask-nodes}
 \includegraphics[width=2.2cm]{4-cpusPerTask-tasksPerNode}
