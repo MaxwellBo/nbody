@@ -438,6 +438,10 @@ Perhaps the only thing that provides a parallel speedup is dedicating more CPUs 
 
  Apart from a few anomolies, adding more nodes degraded performance. Running multiple tasks on the same CPU further degraded performance. 
 
+We failed to find the threshold where MPI overhead gave way to a parallel speedup. Future testing plans may require even higher numbers of bodies.
+
+Testing with higher counts of bodies caused transient out-of-memory issues that persisted even after requests for more memory per node were made. This dramatically reduced the statistical significance of tests with 16384 bodies.
+
  \subsubsection*{What Next}
 
 Efforts can be made to reduce the MPI overhead. Currently \texttt{Body}s are sent in their entirety, at every single simulation step. We do not have to send m and the precomputed \texttt{Gm} and \texttt{m}, as each node can recover this information from the input file. The `leap' step does not need \texttt{Body::Fx} and \texttt{Body::Fy}, and `frog' does not need \texttt{Body::x} and \texttt{Body::y}. Thus, we do not need to \texttt{MPI\_Scatterv} and \texttt{MPI\_Gatherv} this information in preparation for each step. This effectively halves the amount of data that would be sent by MPI. Efforts would need to be made to determine how much of the MPI overhead is due to a hard bandwidth limit on the interconnects between nodes. I hypothesise that MPI overhead scales linearly with data transferred, and that the MPI transmission protocol is responsible for the majority of the overhead at low data transfer quantities. 
@@ -447,4 +451,53 @@ The \textit{Barnes-Hut} algorithm provides an effective means of compartmentaliz
 \bibliographystyle{ieeetr}
 \bibliography{bib}
 
+\section*{Appendix}
+
+\includegraphics[width=4.4cm]{4-cpusPerTask-nodes}
+\includegraphics[width=4.4cm]{4-cpusPerTask-tasksPerNode}
+\includegraphics[width=4.4cm]{4-nodes-tasksPerNode}
+\includegraphics[width=4.4cm]{4-cpusPerTask-nodes-elide_8_tpn}
+\includegraphics[width=4.4cm]{4-cpusPerTask-tasksPerNode-elide_8_tpn}
+\includegraphics[width=4.4cm]{4-nodes-tasksPerNode-elide_8_tpn}
+\includegraphics[width=4.4cm]{4-cpusPerTask-nodes-just_1_tpn}
+
+\includegraphics[width=4.4cm]{16-cpusPerTask-nodes}
+\includegraphics[width=4.4cm]{16-cpusPerTask-tasksPerNode}
+\includegraphics[width=4.4cm]{16-nodes-tasksPerNode}
+\includegraphics[width=4.4cm]{16-cpusPerTask-nodes-elide_8_tpn}
+\includegraphics[width=4.4cm]{16-cpusPerTask-tasksPerNode-elide_8_tpn}
+\includegraphics[width=4.4cm]{16-nodes-tasksPerNode-elide_8_tpn}
+\includegraphics[width=4.4cm]{16-cpusPerTask-nodes-just_1_tpn}
+
+\includegraphics[width=4.4cm]{64-cpusPerTask-nodes}
+\includegraphics[width=4.4cm]{64-cpusPerTask-tasksPerNode}
+\includegraphics[width=4.4cm]{64-nodes-tasksPerNode}
+\includegraphics[width=4.4cm]{64-cpusPerTask-nodes-elide_8_tpn}
+\includegraphics[width=4.4cm]{64-cpusPerTask-tasksPerNode-elide_8_tpn}
+\includegraphics[width=4.4cm]{64-nodes-tasksPerNode-elide_8_tpn}
+\includegraphics[width=4.4cm]{64-cpusPerTask-nodes-just_1_tpn}
+\includegraphics[width=4.4cm]{256-cpusPerTask-nodes}
+\includegraphics[width=4.4cm]{256-cpusPerTask-tasksPerNode}
+\includegraphics[width=4.4cm]{256-nodes-tasksPerNode}
+\includegraphics[width=4.4cm]{256-cpusPerTask-nodes-elide_8_tpn}
+\includegraphics[width=4.4cm]{256-cpusPerTask-tasksPerNode-elide_8_tpn}
+\includegraphics[width=4.4cm]{256-nodes-tasksPerNode-elide_8_tpn}
+\includegraphics[width=4.4cm]{256-cpusPerTask-nodes-just_1_tpn}
+
+\includegraphics[width=4.4cm]{1024-cpusPerTask-nodes}
+\includegraphics[width=4.4cm]{1024-cpusPerTask-tasksPerNode}
+\includegraphics[width=4.4cm]{1024-nodes-tasksPerNode}
+\includegraphics[width=4.4cm]{1024-cpusPerTask-nodes-elide_8_tpn}
+\includegraphics[width=4.4cm]{1024-cpusPerTask-tasksPerNode-elide_8_tpn}
+\includegraphics[width=4.4cm]{1024-nodes-tasksPerNode-elide_8_tpn}
+\includegraphics[width=4.4cm]{1024-cpusPerTask-nodes-just_1_tpn}
+
+
+\includegraphics[width=4.4cm]{4096-cpusPerTask-nodes}
+\includegraphics[width=4.4cm]{4096-cpusPerTask-tasksPerNode}
+\includegraphics[width=4.4cm]{4096-nodes-tasksPerNode}
+\includegraphics[width=4.4cm]{4096-cpusPerTask-nodes-elide_8_tpn}
+\includegraphics[width=4.4cm]{4096-cpusPerTask-tasksPerNode-elide_8_tpn}
+\includegraphics[width=4.4cm]{4096-nodes-tasksPerNode-elide_8_tpn}
+\includegraphics[width=4.4cm]{4096-cpusPerTask-nodes-just_1_tpn}
 \end{document}

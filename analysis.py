@@ -142,7 +142,7 @@ def display_2d_figure(bodies, data, x):
 
     name = "scaling"
 
-    print("\includegraphics[width=2.2cm]{" + name + "}")
+    print("\includegraphics[width=4.4cm]{" + name + "}")
     plt.savefig("reports/images/" + name)
 
 def display_figure(bodies, data, x, y, fil):
@@ -185,7 +185,7 @@ def display_figure(bodies, data, x, y, fil):
         extra=("-{fil}".format(fil=fil) if fil else "")
     )
 
-    print("\includegraphics[width=2.2cm]{" + name + "}")
+    print("\includegraphics[width=4.4cm]{" + name + "}")
     plt.savefig("reports/images/" + name)
 
 if __name__ == "__main__":
