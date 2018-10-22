@@ -81,6 +81,12 @@ v_{i+1}&=v_{i+1/2}+a_{i+1}{\frac {\Delta t}{2}}
 \end{align*}
 
 that is stable with variable timstepping, but incurs an additional acceleration calculation per every two half timesteps.
+
+\framebreak
+
+Runge–Kutta
+
+
 \end{frame}
 
 \begin{frame}[allowframebreaks]{Barnes-Hut}
@@ -132,6 +138,10 @@ E_\text{k} =\tfrac{1}{2} mv^2
 \begin{frame}[allowframebreaks]{Performance Optimizations}
 \section{Performance Optimizations}
 
+Structure of vectors of properties VS vectors of stuctures as properties
+
+\framebreak
+
 \begin{align*}
 a_{i}&=F(x_{i})\\
 v_{i+1}&=v_{i}+a_{i}\,\Delta t
@@ -161,13 +171,38 @@ Total CPU time on rank 2 was 36.750000
 
 Total CPU time on rank 3 was 36.960000
 
-\end{frame}
+\framebreak
 
-\begin{frame}[allowframebreaks]{Resultss}
-\section{Results}
+\includegraphics[width=4cm]{mpi_allgather}
+
+
+\[
+  (b/n)n^2 = bn
+\]
+
+\[
+  bn^2  
+\]
+
+\framebreak
+
+\includegraphics[width=4cm]{mpi_scatter}
+
+\includegraphics[width=4cm]{mpi_gather}
+
+
+\[
+  2\dfrac{b}{n}n = 2n
+\]
+
+
 \end{frame}
 
 \begin{frame}[allowframebreaks]{Results}
+\section{Results}
+\end{frame}
+
+\begin{frame}[allowframebreaks]{???}
 \section{???}
 
 \includegraphics[width=8cm]{hmm}
