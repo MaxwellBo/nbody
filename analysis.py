@@ -78,6 +78,12 @@ def ms3():
         "field": "tasksPerNode"
     }
 
+    bodies = {
+        "label": "bodies",
+        "field": "bodies"
+    }
+
+
     if len(sys.argv) not in [1 + 1]:
         print("input")
 
@@ -87,10 +93,14 @@ def ms3():
         data = json.loads(f.read())
         valid_data = [ i for i in data if "time" in i ]
 
-        display_2d_figure(
+        cpu_scaling(
             bodies=4096,
             data=[i for i in valid_data if i["bodies"] == 4096 and i["nodes"] == 1 ],
             x=cpus_per_task
+        )
+
+        body_scaling(
+            data=[i for i in valid_data if i["nodes"] == 1 ]
         )
 
         for bodies in BODIES:
@@ -118,9 +128,7 @@ def ms3():
                         fil=fil
                     )
 
-
-
-def display_2d_figure(bodies, data, x):
+def cpu_scaling(bodies, data, x):
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
@@ -141,6 +149,34 @@ def display_2d_figure(bodies, data, x):
     ax.legend()
 
     name = "scaling"
+
+    print("\includegraphics[width=4.4cm]{" + name + "}")
+    plt.savefig("reports/images/" + name)
+
+def body_scaling(data):
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    x = {
+        "label": "bodies",
+        "field": "bodies"
+    }
+
+    for c, m, d, label in [
+        ('b', 'o', [ i for i in data if not i["enable_barnes_hut"]], "No Barnes-Hut"), 
+        ('r', '^', [ i for i in data if i["enable_barnes_hut"]], "Barnes-Hut")
+    ]:
+        xs = [ i[x["field"]] for i in d ]
+        ys = [ i["time"] for i in d ]
+        ax.scatter(xs, ys, c=c, marker=m, label=label)
+
+    ax.set_title("--ntasks-per-node=1, --nodes=1")
+
+    ax.set_xlabel('{label} (n)'.format(label=x["label"]))
+    ax.set_ylabel('user + sys time (s)')
+    ax.legend()
+
+    name = "bodies_scaling"
 
     print("\includegraphics[width=4.4cm]{" + name + "}")
     plt.savefig("reports/images/" + name)

@@ -1,4 +1,5 @@
 \documentclass{beamer}
+\usepackage{verbatim}
 \usepackage{graphicx}
 \graphicspath{ {images/} }
 
@@ -20,7 +21,6 @@
 
 % Question time: demonstrating correctness of work and understanding of concepts (1)
 
-% Uncomment these lines for an automatically generated outline.
 \begin{frame}{Outline}
  \tableofcontents
 \end{frame}
@@ -104,57 +104,51 @@ that is stable with variable timstepping, but incurs an additional acceleration 
 
 \includegraphics[width=\textwidth]{quadtree_internal}
 
+\framebreak 
+
+\includegraphics[width=\textwidth]{4096-nodes-tasksPerNode}
+
+\framebreak 
+
+\includegraphics[width=\textwidth]{bodies_scaling}
 \end{frame}
 
+\begin{frame}[allowframebreaks]{Correctness}
 \section{Correctness}
+\[
+U = -G\frac {mM}{R}
+\]
+\[
+E_\text{k} =\tfrac{1}{2} mv^2 
+\]
 
-\includegraphics[width=\textwidth]{barnes_hut}
+\includegraphics[width=0.5\textwidth]{barnes_hut}
 
 \framebreak
 
-\includegraphics[width=\textwidth]{energy_anomaly}
+\includegraphics[width=0.5\textwidth]{energy_anomaly}
+\end{frame}
 
-\subsection{Tables and Figures}
+\begin{frame}[allowframebreaks]{Performance Optimizations}
+\section{Performance Optimizations}
+\end{frame}
 
-\begin{frame}{Tables and Figures}
+\begin{frame}[allowframebreaks]{Parallelization}
+\section{Parallelization}
 
-\begin{itemize}
-\item Use \texttt{tabular} for basic tables --- see Table~\ref{tab:widgets}, for example.
-\item You can upload a figure (JPEG, PNG or PDF) using the files menu. 
-\item To include it in your document, use the \texttt{includegraphics} command (see the comment below in the source code).
-\end{itemize}
+\verbatiminput{head.txt}
+\includegraphics[width=4cm]{mpi_scatter}
 
-% \begin{block}{Examples}
-% Some examples of commonly used commands and features are included, to help you get started.
-% \end{block}
+\framebreak
 
-% Commands to include a figure:
-%\begin{figure}
-%\includegraphics[width=\textwidth]{your-figure's-file-name}
-%\caption{\label{fig:your-figure}Caption goes here.}
-%\end{figure}
+\verbatiminput{tail.txt}
 
-\begin{table}
-\centering
-\begin{tabular}{l|r}
-Item & Quantity \\\hline
-Widgets & 42 \\
-Gadgets & 13
-\end{tabular}
-\caption{\label{tab:widgets}An example table.}
-\end{table}
+\includegraphics[width=4cm]{mpi_gather}
 
 \end{frame}
 
-\subsection{Mathematics}
-
-\begin{frame}{Readable Mathematics}
-
-Let $X_1, X_2, \ldots, X_n$ be a sequence of independent and identically distributed random variables with $\text{E}[X_i] = \mu$ and $\text{Var}[X_i] = \sigma^2 < \infty$, and let
-$$S_n = \frac{X_1 + X_2 + \cdots + X_n}{n}
-      = \frac{1}{n}\sum_{i}^{n} X_i$$
-denote their mean. Then as $n$ approaches infinity, the random variables $\sqrt{n}(S_n - \mu)$ converge in distribution to a normal $\mathcal{N}(0, \sigma^2)$.
-
+\begin{frame}[allowframebreaks]{Test Plans}
+\section{Test Plans}
 \end{frame}
 
 \end{document}

@@ -1,0 +1,12 @@
+    #pragma omp parallel for shared(bodies)
+    for (size_t i = 0; i < sbodies.size(); i++) {
+        auto& body = sbodies[i];
+
+        if (step % 2 == LEAP) {
+            body.leap(timestep);
+        }
+        else {
+            body.frog(timestep);
+        }
+    }
+}
