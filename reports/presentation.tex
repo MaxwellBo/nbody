@@ -131,6 +131,12 @@ E_\text{k} =\tfrac{1}{2} mv^2
 
 \begin{frame}[allowframebreaks]{Performance Optimizations}
 \section{Performance Optimizations}
+
+\begin{align*}
+a_{i}&=F(x_{i})\\
+v_{i+1}&=v_{i}+a_{i}\,\Delta t
+\end{align*}
+
 \end{frame}
 
 \begin{frame}[allowframebreaks]{Parallelization}
@@ -145,10 +151,59 @@ E_\text{k} =\tfrac{1}{2} mv^2
 
 \includegraphics[width=4cm]{mpi_gather}
 
+\framebreak
+
+Total CPU time on rank 0 was 89.820000
+
+Total CPU time on rank 1 was 37.040000
+
+Total CPU time on rank 2 was 36.750000
+
+Total CPU time on rank 3 was 36.960000
+
 \end{frame}
 
-\begin{frame}[allowframebreaks]{Test Plans}
-\section{Test Plans}
+\begin{frame}[allowframebreaks]{Resultss}
+\section{Results}
+\end{frame}
+
+\begin{frame}[allowframebreaks]{Results}
+\section{???}
+
+\includegraphics[width=8cm]{hmm}
+
+\framebreak
+
+\includegraphics[width=\linewidth]{4096-nodes-tasksPerNode}
+
+\framebreak
+
+\includegraphics[width=\linewidth]{4096-cpusPerTask-tasksPerNode}
+
+\framebreak
+
+\includegraphics[width=\linewidth]{4-cpusPerTask-tasksPerNode}
+
+\framebreak
+
+\includegraphics[width=\linewidth]{1024-cpusPerTask-tasksPerNode-elide_8_tpn}
+
+\framebreak
+
+\includegraphics[width=\linewidth]{16-cpusPerTask-nodes-just_1_tpn}
+
+\framebreak
+
+\includegraphics[width=\linewidth]{64-cpusPerTask-nodes-just_1_tpn}
+
+\framebreak
+
+\includegraphics[width=5.2cm]{256-cpusPerTask-nodes-just_1_tpn}\includegraphics[width=5.2cm]{1024-cpusPerTask-nodes-just_1_tpn}\includegraphics[width=5.2cm]{4096-cpusPerTask-nodes-just_1_tpn}
+
+\framebreak
+
+\includegraphics[width=\linewidth]{scaling}
+
 \end{frame}
 
 \end{document}

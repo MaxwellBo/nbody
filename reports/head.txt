@@ -1,6 +1,8 @@
 while (True) {
+    quadtree = QuadTree(bodies);
+    
     #pragma omp parallel for shared(bodies)
     for (size_t i = 0; i < bodies.size(); i++) {
         auto& body = sbodies[i];
-        quad_tree.calculate_force(body);
+        quadtree.calculate_force(body);
     }
