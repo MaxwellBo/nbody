@@ -1,3 +1,7 @@
+Please don't judge me for the code contained in this repo. I was tired, stressed and rushed :( 
+
+Anyway, this does some gravity simulation shit which I think is pretty funky. Examples in `/outputs`. 
+
 ## Serial - MS1
 
 - `./run.sh` [filename from `./inputs`]
